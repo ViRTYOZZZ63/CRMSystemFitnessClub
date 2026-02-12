@@ -1,0 +1,31 @@
+﻿{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start local server (Python)",
+      "type": "shell",
+      "command": "if (Get-Command py -ErrorAction SilentlyContinue) { py -m http.server 5500 } elseif (Get-Command python -ErrorAction SilentlyContinue) { python -m http.server 5500 } else { Write-Error 'Python 3 is not installed or not in PATH.'; exit 1 }",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": "."
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Serving HTTP on"
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}
