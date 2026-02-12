@@ -3,84 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PulsePoint CRM</title>
+    <title>PulsePoint CRM — JSX Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="bg-overlay"></div>
-
-    <main class="page-shell">
-      <section class="auth-panel glass" id="auth-panel">
-        <div>
-          <p class="eyebrow">PulsePoint Fitness Club</p>
-          <h1>CRM для современного фитнес-клуба</h1>
-          <p class="muted">
-            Полноценные рабочие кабинеты для администратора, тренера, HR и бухгалтерии.
-            Управляйте командой, расписанием, нагрузкой и финансами в едином окне.
-          </p>
-        </div>
-
-        <form id="login-form" class="login-form">
-          <label>
-            Email
-            <input id="email" type="email" placeholder="name@pulsepoint.club" required />
-          </label>
-
-          <label>
-            Пароль
-            <input id="password" type="password" placeholder="Введите пароль" required />
-          </label>
-
-          <label>
-            Роль
-            <select id="role" required>
-              <option value="">Выберите роль</option>
-              <option value="admin">Администратор</option>
-              <option value="trainer">Тренер</option>
-              <option value="hr">HR</option>
-              <option value="accountant">Бухгалтер</option>
-            </select>
-          </label>
-
-          <button class="btn-primary" type="submit">Войти в систему</button>
-          <p id="auth-message" class="status-message"></p>
-        </form>
-
-        <div class="demo-box">
-          <h3>Демо-аккаунты</h3>
-          <ul>
-            <li>admin@pulsepoint.club / admin123</li>
-            <li>trainer@pulsepoint.club / trainer123</li>
-            <li>hr@pulsepoint.club / hr123</li>
-            <li>finance@pulsepoint.club / finance123</li>
-          </ul>
-        </div>
-      </section>
-
-      <section id="app-shell" class="app-shell hidden">
-        <header class="topbar glass">
-          <div>
-            <p class="eyebrow" id="role-badge"></p>
-            <h2 id="dashboard-title"></h2>
-          </div>
-          <div class="top-actions">
-            <span class="chip" id="club-label">PulsePoint · Москва</span>
-            <button id="logout" class="btn-ghost">Выйти</button>
-          </div>
-        </header>
-
-        <nav id="role-nav" class="role-nav glass"></nav>
-
-        <section id="dashboard-content" class="dashboard-content"></section>
-      </section>
-    </main>
-
-    <script src="app.js"></script>
+    <div id="root"></div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel" src="app.jsx"></script>
   </body>
 </html>
