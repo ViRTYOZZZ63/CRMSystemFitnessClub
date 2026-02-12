@@ -119,7 +119,8 @@ function App() {
       setAuthMessage({ text: 'Заполните обязательные поля.', type: 'error' });
       return;
     }
-    const exists = db.users.some((u) => u.email.toLowerCase() === registerForm.email.toLowerCase());
+    const normalizedEmail = registerForm.email.trim().toLowerCase();
+    const exists = db.users.some((u) => u.email.trim().toLowerCase() === normalizedEmail);
     if (exists) {
       setAuthMessage({ text: 'Пользователь с таким email уже существует.', type: 'error' });
       return;
@@ -128,7 +129,7 @@ function App() {
     const newUser = {
       id: nextId(db.users),
       name: registerForm.name,
-      email: registerForm.email.trim().toLowerCase(),
+      email: normalizedEmail,
       phone: registerForm.phone,
       password: registerForm.password,
       role: registerForm.role,
@@ -360,8 +361,8 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
         <form className="form-grid" onSubmit={(e) => {
           e.preventDefault();
           if (!accountForm.name || !accountForm.email || !accountForm.password) return;
-          if (db.users.some((u) => u.email === accountForm.email)) return;
-          setDb((s) => ({ ...s, users: [...s.users, { id: nextId(s.users), ...accountForm, trainerId: accountForm.role === 'trainer' ? s.trainers[0]?.id : undefined }] }));
+          if (db.users.some((u) => u.email.trim().toLowerCase() === accountForm.email.trim().toLowerCase())) return;
+          setDb((s) => ({ ...s, users: [...s.users, { id: nextId(s.users), ...accountForm, email: accountForm.email.trim().toLowerCase(), trainerId: accountForm.role === 'trainer' ? s.trainers[0]?.id : undefined }] }));
           setAccountForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
         }}>
           <input placeholder="ФИО" value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} />

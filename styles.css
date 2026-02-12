@@ -18,6 +18,7 @@ html, body {
   overscroll-behavior: none;
 }
 body {
+  overflow-x: hidden;
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--text);
   background:
