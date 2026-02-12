@@ -179,8 +179,8 @@ function App() {
 
           <div className="auth-box">
             <div className="switch-row">
-              <button className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>
-              <button className={`btn ${authMode === 'register' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('register')}>Новая учётка</button>
+              <button type="button" className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>
+              <button type="button" className={`btn ${authMode === 'register' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('register')}>Новая учётка</button>
             </div>
 
             {authMode === 'login' ? (
@@ -346,7 +346,7 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
             c.time,
             c.room,
             c.capacity,
-            <button className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.filter((x) => x.id !== c.id) }))}>Удалить</button>,
+            <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.filter((x) => x.id !== c.id) }))}>Удалить</button>,
           ])}
         />
       </Card>
@@ -434,7 +434,7 @@ function TrainerDashboard({ tab, db, setDb, user }) {
             c.time,
             c.title,
             c.done ? 'Проведено' : 'Запланировано',
-            <button className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
+            <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
           ])}
         />
       </Card>

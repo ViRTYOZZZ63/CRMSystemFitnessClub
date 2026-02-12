@@ -28,7 +28,9 @@ body {
 .app-root {
   width: min(1320px, 95%);
   margin: 14px auto;
-  display: grid;
+  min-height: calc(100vh - 28px);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -212,6 +214,7 @@ th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--lin
 .day.empty { background: transparent; border: 1px dashed rgba(148,163,184,.25); }
 
 .site-footer {
+  margin-top: auto;
   padding: 12px 14px;
   display: flex;
   justify-content: space-between;
