@@ -29,14 +29,67 @@
           Минималистичный, современный и удобный инструмент для администратора, тренера, HR и бухгалтерии.
           Каждая роль видит только нужные данные и работает быстрее.
         </p>
-        <div class="hero-actions">
-          <button class="cta">Начать внедрение</button>
-          <button class="ghost">Посмотреть сценарии ролей</button>
-        </div>
       </div>
     </header>
 
     <main class="container">
+      <section class="auth section-card">
+        <div class="auth-header">
+          <h2>Вход в CRM</h2>
+          <p class="section-subtitle">Выберите роль и войдите в систему, чтобы открыть персональный рабочий стол.</p>
+        </div>
+
+        <div class="auth-layout">
+          <form id="login-form" class="login-form">
+            <label>
+              Рабочий email
+              <input id="email" type="email" placeholder="name@pulsepoint.club" required />
+            </label>
+
+            <label>
+              Пароль
+              <input id="password" type="password" placeholder="Введите пароль" required />
+            </label>
+
+            <label>
+              Роль
+              <select id="role" required>
+                <option value="">Выберите роль</option>
+                <option value="admin">Администратор</option>
+                <option value="trainer">Тренер</option>
+                <option value="hr">HR</option>
+                <option value="accountant">Бухгалтер</option>
+              </select>
+            </label>
+
+            <button type="submit" class="cta">Войти в систему</button>
+            <p id="auth-message" class="auth-message"></p>
+          </form>
+
+          <aside class="demo-credentials">
+            <h3>Демо-доступ</h3>
+            <ul>
+              <li><strong>Админ:</strong> admin@pulsepoint.club / admin123</li>
+              <li><strong>Тренер:</strong> trainer@pulsepoint.club / trainer123</li>
+              <li><strong>HR:</strong> hr@pulsepoint.club / hr123</li>
+              <li><strong>Бухгалтер:</strong> finance@pulsepoint.club / finance123</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <section id="dashboard" class="dashboard section-card hidden" aria-live="polite">
+        <div class="dashboard-head">
+          <div>
+            <p class="eyebrow" id="role-badge"></p>
+            <h2 id="dashboard-title"></h2>
+          </div>
+          <button id="logout" class="ghost">Выйти</button>
+        </div>
+        <p id="dashboard-description" class="section-subtitle"></p>
+        <div id="permissions-grid" class="role-grid"></div>
+      </section>
+
       <section class="roles section-card">
         <h2>Ролевая модель доступа</h2>
         <p class="section-subtitle">
@@ -145,5 +198,7 @@
         </div>
       </section>
     </main>
+
+    <script src="app.js"></script>
   </body>
 </html>
