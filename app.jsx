@@ -24,23 +24,31 @@ const seedData = {
     { id: 5, title: 'Recovery Yoga', trainerId: 5, date: '2026-02-18', time: '19:30', duration: 60, capacity: 20, room: 'B', done: false },
   ],
   clients: [
-    { id: 1, name: 'Екатерина Морозова', program: 'Body Rebuild', trainerId: 1, status: 'Активен' },
-    { id: 2, name: 'Игорь Назаров', program: 'Mass Gain', trainerId: 1, status: 'Активен' },
-    { id: 3, name: 'София Ларионова', program: 'Functional Fit', trainerId: 2, status: 'Пауза' },
+    { id: 1, name: 'Екатерина Морозова', program: 'Body Rebuild', trainerId: 1, status: 'Активен', membership: 'Premium', visits: 16, lastVisit: '2026-02-16' },
+    { id: 2, name: 'Игорь Назаров', program: 'Mass Gain', trainerId: 1, status: 'Активен', membership: 'Standard', visits: 11, lastVisit: '2026-02-15' },
+    { id: 3, name: 'София Ларионова', program: 'Functional Fit', trainerId: 2, status: 'Пауза', membership: 'Standard', visits: 6, lastVisit: '2026-02-09' },
+    { id: 4, name: 'Виктор Осипов', program: 'CrossFit Start', trainerId: 3, status: 'Активен', membership: 'Premium', visits: 13, lastVisit: '2026-02-16' },
+    { id: 5, name: 'Алена Журавлева', program: 'Recovery Mobility', trainerId: 4, status: 'Активен', membership: 'Lite', visits: 8, lastVisit: '2026-02-14' },
+    { id: 6, name: 'Михаил Лисин', program: 'Yoga Balance', trainerId: 5, status: 'Активен', membership: 'Premium', visits: 19, lastVisit: '2026-02-16' },
   ],
   workLogs: [
     { id: 1, trainerId: 1, date: '2026-02-16', start: '07:30', end: '16:30' },
     { id: 2, trainerId: 2, date: '2026-02-16', start: '12:00', end: '21:00' },
     { id: 3, trainerId: 3, date: '2026-02-17', start: '13:00', end: '22:00' },
+    { id: 4, trainerId: 4, date: '2026-02-17', start: '09:00', end: '18:00' },
+    { id: 5, trainerId: 5, date: '2026-02-18', start: '11:00', end: '20:00' },
   ],
   candidates: [
     { id: 1, name: 'Ирина Соколова', position: 'Тренер групповых программ', stage: 'Собеседование' },
     { id: 2, name: 'Сергей Лапин', position: 'Персональный тренер', stage: 'Оффер' },
+    { id: 3, name: 'Полина Самсонова', position: 'Администратор ресепшн', stage: 'Скрининг' },
   ],
   payments: [
     { id: 1, client: 'Екатерина Морозова', amount: 14500, method: 'Карта', date: '2026-02-15' },
-    { id: 2, client: 'Иван Петров', amount: 9900, method: 'Наличные', date: '2026-02-15' },
-    { id: 3, client: 'Дарья Романова', amount: 18900, method: 'Онлайн', date: '2026-02-16' },
+    { id: 2, client: 'Игорь Назаров', amount: 9900, method: 'Наличные', date: '2026-02-15' },
+    { id: 3, client: 'Виктор Осипов', amount: 18900, method: 'Онлайн', date: '2026-02-16' },
+    { id: 4, client: 'Михаил Лисин', amount: 12500, method: 'Карта', date: '2026-02-16' },
+    { id: 5, client: 'Алена Журавлева', amount: 7900, method: 'Онлайн', date: '2026-02-17' },
   ],
   notes: [],
 };
@@ -62,6 +70,13 @@ const roleTabs = {
 const money = (v) => `${Number(v).toLocaleString('ru-RU')} ₽`;
 const nextId = (arr) => (arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1);
 const byId = (arr, id) => arr.find((x) => x.id === Number(id));
+const calcHoursValue = (start, end) => {
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const mins = eh * 60 + em - (sh * 60 + sm);
+  return Math.max(0, mins / 60);
+};
+const calcHours = (start, end) => `${calcHoursValue(start, end).toFixed(1)} ч`;
 
 function App() {
   const [db, setDb] = useState(null);
@@ -103,17 +118,33 @@ function App() {
 
   const dashboardMetrics = useMemo(() => {
     if (!db) {
-      return { revenue: 0, classCount: 0, avgDailyClasses: '0.0', totalPayroll: 0 };
+      return {
+        revenue: 0,
+        classCount: 0,
+        avgDailyClasses: '0.0',
+        totalPayroll: 0,
+        clientsCount: 0,
+        activeClients: 0,
+        monthlyVisits: 0,
+        avgVisitRate: 0,
+        avgCheck: 0,
+      };
     }
 
     const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
     const classCount = db.classes.length;
+    const clientsCount = db.clients.length;
+    const activeClients = db.clients.filter((c) => c.status === 'Активен').length;
+    const monthlyVisits = db.clients.reduce((sum, c) => sum + Number(c.visits || 0), 0);
+    const avgVisitRate = clientsCount ? (monthlyVisits / clientsCount).toFixed(1) : '0.0';
     const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
+    const avgCheck = db.payments.length ? Math.round(revenue / db.payments.length) : 0;
     const totalPayroll = db.trainers.reduce((sum, tr) => {
       const count = db.classes.filter((c) => c.trainerId === tr.id).length;
       return sum + count * tr.rate;
     }, 0);
-    return { revenue, classCount, avgDailyClasses, totalPayroll };
+
+    return { revenue, classCount, avgDailyClasses, totalPayroll, clientsCount, activeClients, monthlyVisits, avgVisitRate, avgCheck };
   }, [db]);
 
   if (!dbReady || !db) {
@@ -207,7 +238,13 @@ function App() {
           <h1>CRM для фитнес-клуба</h1>
         </div>
         <div className="header-meta">
-          <span className="chip">г. Самара, ТЦ ПаркХаус</span>
+          <div className="location-chip" title="Адрес клуба">
+            <span className="location-dot"></span>
+            <div>
+              <small>Флагманский клуб</small>
+              <b>Самара · ТЦ ПаркХаус</b>
+            </div>
+          </div>
           {user && <button className="btn ghost" onClick={logout}>Выйти</button>}
         </div>
       </header>
@@ -354,8 +391,12 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
       <>
         <Card>
           <h3>Ключевые показатели клуба</h3>
-          <div className="metrics">
+          <div className="metrics metrics-rich">
             <Metric label="Выручка" value={money(metrics.revenue)} />
+            <Metric label="Средний чек" value={money(metrics.avgCheck)} />
+            <Metric label="Активные клиенты" value={`${metrics.activeClients}/${metrics.clientsCount}`} />
+            <Metric label="Посещений / месяц" value={metrics.monthlyVisits} />
+            <Metric label="Средняя посещаемость" value={`${metrics.avgVisitRate} на клиента`} />
             <Metric label="Тренеров" value={db.trainers.length} />
             <Metric label="Занятий" value={metrics.classCount} />
             <Metric label="Средняя нагрузка / день" value={metrics.avgDailyClasses} />
@@ -365,6 +406,16 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
         <Card>
           <h3>Нагрузка тренеров (диаграмма)</h3>
           <LoadBars db={db} />
+        </Card>
+        <Card>
+          <h3>Топ клиентов по посещениям</h3>
+          <DataTable
+            headers={['Клиент', 'Абонемент', 'Посещения', 'Последний визит', 'Статус']}
+            rows={[...db.clients]
+              .sort((a, b) => Number(b.visits || 0) - Number(a.visits || 0))
+              .slice(0, 6)
+              .map((c) => [c.name, c.membership || '—', Number(c.visits || 0), c.lastVisit || '—', c.status])}
+          />
         </Card>
       </>
     );
@@ -457,6 +508,18 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
           headers={['Сотрудник', 'Роль', 'Email', 'Телефон']}
           rows={db.users.map((u) => [u.name, roleLabels[u.role], u.email, u.phone || '-'])}
         />
+        <h3>Счётчики посещений клиентов</h3>
+        <DataTable
+          headers={['Клиент', 'Абонемент', 'Тренер', 'Посещения', 'Последний визит', 'Статус']}
+          rows={db.clients.map((c) => [
+            c.name,
+            c.membership || '—',
+            byId(db.trainers, c.trainerId)?.name || '—',
+            Number(c.visits || 0),
+            c.lastVisit || '—',
+            c.status,
+          ])}
+        />
       </Card>
     );
   }
@@ -527,6 +590,10 @@ function TrainerDashboard({ tab, db, setDb, user }) {
     return (
       <Card>
         <h3>Мои клиенты и заметки</h3>
+        <DataTable
+          headers={['Клиент', 'Программа', 'Посещения', 'Последний визит', 'Статус']}
+          rows={myClients.map((c) => [c.name, c.program, Number(c.visits || 0), c.lastVisit || '—', c.status])}
+        />
         <form className="form-grid" onSubmit={(e) => {
           e.preventDefault();
           if (!note.client || !note.text) return;
@@ -618,8 +685,8 @@ function HRDashboard({ tab, db, setDb }) {
         headers={['Тренер', 'Количество смен', 'Часы']}
         rows={db.trainers.map((t) => {
           const logs = db.workLogs.filter((w) => w.trainerId === t.id);
-          const hours = logs.reduce((sum, w) => sum + Number(calcHours(w.start, w.end)), 0);
-          return [t.name, logs.length, `${hours} ч`];
+          const hours = logs.reduce((sum, w) => sum + calcHoursValue(w.start, w.end), 0);
+          return [t.name, logs.length, `${hours.toFixed(1)} ч`];
         })}
       />
     </Card>
@@ -805,13 +872,6 @@ function LoadCalendar({ db }) {
       </div>
     </div>
   );
-}
-
-function calcHours(start, end) {
-  const [sh, sm] = start.split(':').map(Number);
-  const [eh, em] = end.split(':').map(Number);
-  const mins = eh * 60 + em - (sh * 60 + sm);
-  return `${Math.max(0, mins / 60).toFixed(1)} ч`;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
