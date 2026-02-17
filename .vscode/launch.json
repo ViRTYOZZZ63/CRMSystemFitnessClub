@@ -1,0 +1,13 @@
+﻿{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run CRM in Microsoft Edge",
+      "type": "pwa-msedge",
+      "request": "launch",
+      "url": "http://localhost:5500/index.html",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Start local server (Python)"
+    }
+  ]
+}
