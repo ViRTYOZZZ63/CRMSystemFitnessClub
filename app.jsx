@@ -267,6 +267,7 @@ function App() {
           <div className="location-chip" title="Адрес клуба">
             <span className="location-dot"></span>
             <div>
+              <small>Флагманский клуб</small>
               <b>Самара · ТЦ ПаркХаус</b>
             </div>
           </div>
@@ -278,12 +279,16 @@ function App() {
         <section className="auth-layout glass">
           <div className="auth-promo">
             <p className="auth-kicker">Executive Access</p>
-            <h2>Авторизация PulsePoint</h2>
+            <h2>Премиальная авторизация PulsePoint</h2>
             <p>
               Вход в CRM с усиленным UX: роль определяется автоматически, а все рабочие
               сценарии открываются за 1 шаг.
             </p>
-            
+            <div className="auth-highlights">
+              <div><b>24/7</b><span>доступ к данным клуба</span></div>
+              <div><b>1 click</b><span>переключение между модулями</span></div>
+              <div><b>Secure</b><span>проверка учётной записи в API</span></div>
+            </div>
             <ul>
               <li>admin@pulsepoint.club / admin123</li>
               <li>trainer@pulsepoint.club / trainer123</li>
@@ -294,6 +299,7 @@ function App() {
 
           <div className="auth-box">
             <p className="auth-box-title">Доступ сотрудника</p>
+            <p className="auth-box-subtitle">Все элементы формы выстроены сверху вниз для быстрого ввода.</p>
 
             <div className="switch-row">
               <button type="button" className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>

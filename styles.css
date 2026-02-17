@@ -149,16 +149,6 @@ body {
   font-size: 1.1rem;
   font-weight: 700;
 }
-
-.auth-form-stack {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-content: flex-start;
-  align-items: stretch;
-  gap: 20px;
-}
-
 .auth-box-subtitle {
   margin: 6px 0 14px;
   color: #b8c9df;
@@ -166,8 +156,12 @@ body {
 }
 .switch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .auth-form-stack {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: flex-start;
+  align-items: stretch;
+  gap: 20px;
 }
 .field-label {
   display: grid;
