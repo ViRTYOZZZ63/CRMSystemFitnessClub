@@ -101,6 +101,21 @@ function App() {
     }).catch(() => {});
   }, [db, dbReady]);
 
+  const dashboardMetrics = useMemo(() => {
+    if (!db) {
+      return { revenue: 0, classCount: 0, avgDailyClasses: '0.0', totalPayroll: 0 };
+    }
+
+    const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const classCount = db.classes.length;
+    const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
+    const totalPayroll = db.trainers.reduce((sum, tr) => {
+      const count = db.classes.filter((c) => c.trainerId === tr.id).length;
+      return sum + count * tr.rate;
+    }, 0);
+    return { revenue, classCount, avgDailyClasses, totalPayroll };
+  }, [db]);
+
   if (!dbReady || !db) {
     return (
       <div className="app-root">
@@ -115,17 +130,6 @@ function App() {
   }
 
   const user = db.users.find((u) => u.id === sessionUserId) || null;
-
-  const dashboardMetrics = useMemo(() => {
-    const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const classCount = db.classes.length;
-    const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
-    const totalPayroll = db.trainers.reduce((sum, tr) => {
-      const count = db.classes.filter((c) => c.trainerId === tr.id).length;
-      return sum + count * tr.rate;
-    }, 0);
-    return { revenue, classCount, avgDailyClasses, totalPayroll };
-  }, [db]);
 
   function doLogin(e) {
     e.preventDefault();
@@ -211,11 +215,17 @@ function App() {
       {!user ? (
         <section className="auth-layout glass">
           <div className="auth-promo">
-            <h2>Новая авторизация без выбора роли</h2>
+            <p className="auth-kicker">Executive Access</p>
+            <h2>Премиальная авторизация PulsePoint</h2>
             <p>
-              Роль определяется автоматически по учетной записи. Вы можете сразу войти
-              или создать новую учётную запись сотрудника.
+              Вход в CRM с усиленным UX: роль определяется автоматически, а все рабочие
+              сценарии открываются за 1 шаг.
             </p>
+            <div className="auth-highlights">
+              <div><b>24/7</b><span>доступ к данным клуба</span></div>
+              <div><b>1 click</b><span>переключение между модулями</span></div>
+              <div><b>Secure</b><span>проверка учётной записи в API</span></div>
+            </div>
             <ul>
               <li>admin@pulsepoint.club / admin123</li>
               <li>trainer@pulsepoint.club / trainer123</li>
@@ -225,29 +235,53 @@ function App() {
           </div>
 
           <div className="auth-box">
+            <p className="auth-box-title">Доступ сотрудника</p>
+            <p className="auth-box-subtitle">Все элементы формы выстроены сверху вниз для быстрого ввода.</p>
+
             <div className="switch-row">
               <button type="button" className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>
               <button type="button" className={`btn ${authMode === 'register' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('register')}>Новая учётка</button>
             </div>
 
             {authMode === 'login' ? (
-              <form className="form-grid" onSubmit={doLogin}>
-                <input placeholder="Email" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
-                <input type="password" placeholder="Пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
-                <button className="btn primary" type="submit">Войти</button>
+              <form className="auth-form-stack" onSubmit={doLogin}>
+                <label className="field-label">
+                  Email
+                  <input placeholder="name@pulsepoint.club" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Пароль
+                  <input type="password" placeholder="Введите пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
+                </label>
+                <button className="btn primary" type="submit">Войти в CRM</button>
               </form>
             ) : (
-              <form className="form-grid" onSubmit={doRegister}>
-                <input placeholder="ФИО" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
-                <input placeholder="Email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
-                <input placeholder="Телефон" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} />
-                <input type="password" placeholder="Пароль" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
-                <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}>
-                  <option value="trainer">Тренер</option>
-                  <option value="hr">HR</option>
-                  <option value="accountant">Бухгалтер</option>
-                  <option value="admin">Администратор</option>
-                </select>
+              <form className="auth-form-stack" onSubmit={doRegister}>
+                <label className="field-label">
+                  ФИО
+                  <input placeholder="Иванов Иван Иванович" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Email
+                  <input placeholder="name@pulsepoint.club" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Телефон
+                  <input placeholder="+7 900 000-00-00" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Пароль
+                  <input type="password" placeholder="Создайте пароль" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Роль сотрудника
+                  <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}>
+                    <option value="trainer">Тренер</option>
+                    <option value="hr">HR</option>
+                    <option value="accountant">Бухгалтер</option>
+                    <option value="admin">Администратор</option>
+                  </select>
+                </label>
                 <button className="btn primary" type="submit">Создать учётку</button>
               </form>
             )}
