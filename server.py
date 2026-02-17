@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import json
 import sqlite3
+from functools import partial
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
-DB_PATH = Path('crm.db')
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / 'crm.db'
 
 SEED_STATE = {
     "users": [
@@ -21,11 +23,28 @@ SEED_STATE = {
     "classes": [
         {"id": 1, "title": "Morning Power", "trainerId": 1, "date": "2026-02-16", "time": "08:00", "duration": 60, "capacity": 12, "room": "A", "done": False},
         {"id": 2, "title": "Functional Burn", "trainerId": 2, "date": "2026-02-16", "time": "18:30", "duration": 60, "capacity": 14, "room": "B", "done": False},
+        {"id": 3, "title": "CrossFit Pro", "trainerId": 3, "date": "2026-02-17", "time": "20:00", "duration": 75, "capacity": 10, "room": "A", "done": False},
     ],
-    "clients": [],
-    "workLogs": [],
-    "candidates": [],
-    "payments": [],
+    "clients": [
+        {"id": 1, "name": "Екатерина Морозова", "program": "Body Rebuild", "trainerId": 1, "status": "Активен", "membership": "Premium", "visits": 16, "lastVisit": "2026-02-16"},
+        {"id": 2, "name": "Игорь Назаров", "program": "Mass Gain", "trainerId": 1, "status": "Активен", "membership": "Standard", "visits": 11, "lastVisit": "2026-02-15"},
+        {"id": 3, "name": "София Ларионова", "program": "Functional Fit", "trainerId": 2, "status": "Пауза", "membership": "Standard", "visits": 6, "lastVisit": "2026-02-09"},
+        {"id": 4, "name": "Виктор Осипов", "program": "CrossFit Start", "trainerId": 3, "status": "Активен", "membership": "Premium", "visits": 13, "lastVisit": "2026-02-16"},
+    ],
+    "workLogs": [
+        {"id": 1, "trainerId": 1, "date": "2026-02-16", "start": "07:30", "end": "16:30"},
+        {"id": 2, "trainerId": 2, "date": "2026-02-16", "start": "12:00", "end": "21:00"},
+        {"id": 3, "trainerId": 3, "date": "2026-02-17", "start": "13:00", "end": "22:00"},
+    ],
+    "candidates": [
+        {"id": 1, "name": "Ирина Соколова", "position": "Тренер групповых программ", "stage": "Собеседование"},
+        {"id": 2, "name": "Сергей Лапин", "position": "Персональный тренер", "stage": "Оффер"},
+    ],
+    "payments": [
+        {"id": 1, "client": "Екатерина Морозова", "amount": 14500, "method": "Карта", "date": "2026-02-15"},
+        {"id": 2, "client": "Игорь Назаров", "amount": 9900, "method": "Наличные", "date": "2026-02-15"},
+        {"id": 3, "client": "Виктор Осипов", "amount": 18900, "method": "Онлайн", "date": "2026-02-16"},
+    ],
     "notes": [],
 }
 
@@ -134,6 +153,6 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     init_db()
-    server = ThreadingHTTPServer(("0.0.0.0", 4173), Handler)
+    server = ThreadingHTTPServer(("0.0.0.0", 4173), partial(Handler, directory=str(BASE_DIR)))
     print("Serving on http://0.0.0.0:4173")
     server.serve_forever()
