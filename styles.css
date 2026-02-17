@@ -211,7 +211,7 @@ body {
   grid-column: span 12;
   padding: 14px;
 }
-.card h3 { margin: 0 0 10px; }
+.card h3 { margin: 0 0 10px;}
 
 .metrics {
   display: grid;
