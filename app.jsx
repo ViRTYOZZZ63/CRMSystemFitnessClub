@@ -78,6 +78,32 @@ const calcHoursValue = (start, end) => {
 };
 const calcHours = (start, end) => `${calcHoursValue(start, end).toFixed(1)} ч`;
 
+
+function normalizeState(rawState) {
+  const base = rawState && typeof rawState === 'object' ? rawState : {};
+  const merged = {
+    ...seedData,
+    ...base,
+    users: Array.isArray(base.users) ? base.users : seedData.users,
+    trainers: Array.isArray(base.trainers) ? base.trainers : seedData.trainers,
+    classes: Array.isArray(base.classes) ? base.classes : seedData.classes,
+    clients: Array.isArray(base.clients) && base.clients.length ? base.clients : seedData.clients,
+    workLogs: Array.isArray(base.workLogs) && base.workLogs.length ? base.workLogs : seedData.workLogs,
+    candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
+    payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
+    notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+  };
+
+  merged.clients = merged.clients.map((client, index) => ({
+    ...client,
+    membership: client.membership || ['Premium', 'Standard', 'Lite'][index % 3],
+    visits: Number.isFinite(Number(client.visits)) ? Number(client.visits) : 0,
+    lastVisit: client.lastVisit || '2026-02-16',
+  }));
+
+  return merged;
+}
+
 function App() {
   const [db, setDb] = useState(null);
   const [dbReady, setDbReady] = useState(false);
@@ -96,10 +122,10 @@ function App() {
         const response = await fetch(`${API_BASE}/bootstrap`);
         if (!response.ok) throw new Error('bootstrap_failed');
         const payload = await response.json();
-        setDb(payload.state || seedData);
+        setDb(normalizeState(payload.state || seedData));
         setDbReady(true);
       } catch {
-        setDb(seedData);
+        setDb(normalizeState(seedData));
         setDbReady(true);
         setDbError('Не удалось подключиться к БД API. Загружен временный демо-режим.');
       }
@@ -213,7 +239,7 @@ function App() {
         return response.json();
       })
       .then((payload) => {
-        setDb(payload.state);
+        setDb(normalizeState(payload.state));
         setRegisterForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
         setAuthMode('login');
         setAuthMessage({ text: 'Учётная запись создана. Теперь войдите.', type: 'success' });
