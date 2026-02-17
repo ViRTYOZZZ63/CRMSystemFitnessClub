@@ -265,11 +265,8 @@ function App() {
         </div>
         <div className="header-meta">
           <div className="location-chip" title="Адрес клуба">
-            <span className="location-dot"></span>
-            <div>
-              <small>Флагманский клуб</small>
-              <b>Самара · ТЦ ПаркХаус</b>
-            </div>
+            <span className="location-title">Флагманский клуб</span>
+            <span className="location-value">Самара · ТЦ ПаркХаус</span>
           </div>
           {user && <button className="btn ghost" onClick={logout}>Выйти</button>}
         </div>
