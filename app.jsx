@@ -1,6 +1,6 @@
 const { useMemo, useState, useEffect } = React;
 
-const STORAGE_KEY = 'pulsepoint-crm-v2';
+const API_BASE = '/api';
 
 const seedData = {
   users: [
@@ -64,14 +64,9 @@ const nextId = (arr) => (arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1)
 const byId = (arr, id) => arr.find((x) => x.id === Number(id));
 
 function App() {
-  const [db, setDb] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? { ...seedData, ...JSON.parse(raw) } : seedData;
-    } catch {
-      return seedData;
-    }
-  });
+  const [db, setDb] = useState(null);
+  const [dbReady, setDbReady] = useState(false);
+  const [dbError, setDbError] = useState('');
   const [sessionUserId, setSessionUserId] = useState(null);
   const [tab, setTab] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -81,8 +76,43 @@ function App() {
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', phone: '', password: '', role: 'trainer' });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  }, [db]);
+    async function bootstrap() {
+      try {
+        const response = await fetch(`${API_BASE}/bootstrap`);
+        if (!response.ok) throw new Error('bootstrap_failed');
+        const payload = await response.json();
+        setDb(payload.state || seedData);
+        setDbReady(true);
+      } catch {
+        setDb(seedData);
+        setDbReady(true);
+        setDbError('Не удалось подключиться к БД API. Загружен временный демо-режим.');
+      }
+    }
+    bootstrap();
+  }, []);
+
+  useEffect(() => {
+    if (!dbReady || !db) return;
+    fetch(`${API_BASE}/state`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: db }),
+    }).catch(() => {});
+  }, [db, dbReady]);
+
+  if (!dbReady || !db) {
+    return (
+      <div className="app-root">
+        <section className="auth-layout glass">
+          <div className="auth-promo">
+            <h2>Загрузка CRM...</h2>
+            <p>Подключаемся к базе данных и загружаем данные клуба.</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   const user = db.users.find((u) => u.id === sessionUserId) || null;
 
@@ -99,18 +129,24 @@ function App() {
 
   function doLogin(e) {
     e.preventDefault();
-    const found = db.users.find(
-      (u) => u.email.toLowerCase() === loginForm.email.trim().toLowerCase() && u.password === loginForm.password,
-    );
-
-    if (!found) {
-      setAuthMessage({ text: 'Неверный email или пароль.', type: 'error' });
-      return;
-    }
-
-    setSessionUserId(found.id);
-    setTab(roleTabs[found.role][0]);
-    setAuthMessage({ text: `Добро пожаловать, ${found.name}!`, type: 'success' });
+    fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('login_failed');
+        return response.json();
+      })
+      .then((payload) => {
+        const found = payload.user;
+        setSessionUserId(found.id);
+        setTab(roleTabs[found.role][0]);
+        setAuthMessage({ text: `Добро пожаловать, ${found.name}!`, type: 'success' });
+      })
+      .catch(() => {
+        setAuthMessage({ text: 'Неверный email или пароль.', type: 'error' });
+      });
   }
 
   function doRegister(e) {
@@ -126,20 +162,30 @@ function App() {
       return;
     }
 
-    const newUser = {
-      id: nextId(db.users),
-      name: registerForm.name,
-      email: normalizedEmail,
-      phone: registerForm.phone,
-      password: registerForm.password,
-      role: registerForm.role,
-      trainerId: registerForm.role === 'trainer' ? db.trainers[0]?.id : undefined,
-    };
-
-    setDb((s) => ({ ...s, users: [...s.users, newUser] }));
-    setRegisterForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
-    setAuthMode('login');
-    setAuthMessage({ text: 'Учётная запись создана. Теперь войдите.', type: 'success' });
+    fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: registerForm.name,
+        email: normalizedEmail,
+        phone: registerForm.phone,
+        password: registerForm.password,
+        role: registerForm.role,
+      }),
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('register_failed');
+        return response.json();
+      })
+      .then((payload) => {
+        setDb(payload.state);
+        setRegisterForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
+        setAuthMode('login');
+        setAuthMessage({ text: 'Учётная запись создана. Теперь войдите.', type: 'success' });
+      })
+      .catch(() => {
+        setAuthMessage({ text: 'Не удалось создать учётную запись.', type: 'error' });
+      });
   }
 
   function logout() {
@@ -206,6 +252,7 @@ function App() {
               </form>
             )}
             <p className={`status ${authMessage.type}`}>{authMessage.text}</p>
+            {dbError ? <p className="status error">{dbError}</p> : null}
           </div>
         </section>
       ) : (
