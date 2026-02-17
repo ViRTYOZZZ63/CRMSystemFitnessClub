@@ -265,7 +265,6 @@ function App() {
         </div>
         <div className="header-meta">
           <div className="location-chip" title="Адрес клуба">
-            <span className="location-title">Флагманский клуб</span>
             <span className="location-value">Самара · ТЦ ПаркХаус</span>
           </div>
           {user && <button className="btn ghost" onClick={logout}>Выйти</button>}
@@ -276,11 +275,7 @@ function App() {
         <section className="auth-layout glass">
           <div className="auth-promo">
             <p className="auth-kicker">Executive Access</p>
-            <h2>Премиальная авторизация PulsePoint</h2>
-            <p>
-              Вход в CRM с усиленным UX: роль определяется автоматически, а все рабочие
-              сценарии открываются за 1 шаг.
-            </p>
+            <h2>Авторизация PulsePoint</h2>
             <div className="auth-highlights">
               <div><b>24/7</b><span>доступ к данным клуба</span></div>
               <div><b>1 click</b><span>переключение между модулями</span></div>
