@@ -24,23 +24,31 @@ const seedData = {
     { id: 5, title: 'Recovery Yoga', trainerId: 5, date: '2026-02-18', time: '19:30', duration: 60, capacity: 20, room: 'B', done: false },
   ],
   clients: [
-    { id: 1, name: 'Екатерина Морозова', program: 'Body Rebuild', trainerId: 1, status: 'Активен' },
-    { id: 2, name: 'Игорь Назаров', program: 'Mass Gain', trainerId: 1, status: 'Активен' },
-    { id: 3, name: 'София Ларионова', program: 'Functional Fit', trainerId: 2, status: 'Пауза' },
+    { id: 1, name: 'Екатерина Морозова', program: 'Body Rebuild', trainerId: 1, status: 'Активен', membership: 'Premium', visits: 16, lastVisit: '2026-02-16' },
+    { id: 2, name: 'Игорь Назаров', program: 'Mass Gain', trainerId: 1, status: 'Активен', membership: 'Standard', visits: 11, lastVisit: '2026-02-15' },
+    { id: 3, name: 'София Ларионова', program: 'Functional Fit', trainerId: 2, status: 'Пауза', membership: 'Standard', visits: 6, lastVisit: '2026-02-09' },
+    { id: 4, name: 'Виктор Осипов', program: 'CrossFit Start', trainerId: 3, status: 'Активен', membership: 'Premium', visits: 13, lastVisit: '2026-02-16' },
+    { id: 5, name: 'Алена Журавлева', program: 'Recovery Mobility', trainerId: 4, status: 'Активен', membership: 'Lite', visits: 8, lastVisit: '2026-02-14' },
+    { id: 6, name: 'Михаил Лисин', program: 'Yoga Balance', trainerId: 5, status: 'Активен', membership: 'Premium', visits: 19, lastVisit: '2026-02-16' },
   ],
   workLogs: [
     { id: 1, trainerId: 1, date: '2026-02-16', start: '07:30', end: '16:30' },
     { id: 2, trainerId: 2, date: '2026-02-16', start: '12:00', end: '21:00' },
     { id: 3, trainerId: 3, date: '2026-02-17', start: '13:00', end: '22:00' },
+    { id: 4, trainerId: 4, date: '2026-02-17', start: '09:00', end: '18:00' },
+    { id: 5, trainerId: 5, date: '2026-02-18', start: '11:00', end: '20:00' },
   ],
   candidates: [
     { id: 1, name: 'Ирина Соколова', position: 'Тренер групповых программ', stage: 'Собеседование' },
     { id: 2, name: 'Сергей Лапин', position: 'Персональный тренер', stage: 'Оффер' },
+    { id: 3, name: 'Полина Самсонова', position: 'Администратор ресепшн', stage: 'Скрининг' },
   ],
   payments: [
     { id: 1, client: 'Екатерина Морозова', amount: 14500, method: 'Карта', date: '2026-02-15' },
-    { id: 2, client: 'Иван Петров', amount: 9900, method: 'Наличные', date: '2026-02-15' },
-    { id: 3, client: 'Дарья Романова', amount: 18900, method: 'Онлайн', date: '2026-02-16' },
+    { id: 2, client: 'Игорь Назаров', amount: 9900, method: 'Наличные', date: '2026-02-15' },
+    { id: 3, client: 'Виктор Осипов', amount: 18900, method: 'Онлайн', date: '2026-02-16' },
+    { id: 4, client: 'Михаил Лисин', amount: 12500, method: 'Карта', date: '2026-02-16' },
+    { id: 5, client: 'Алена Журавлева', amount: 7900, method: 'Онлайн', date: '2026-02-17' },
   ],
   notes: [],
 };
@@ -62,6 +70,39 @@ const roleTabs = {
 const money = (v) => `${Number(v).toLocaleString('ru-RU')} ₽`;
 const nextId = (arr) => (arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1);
 const byId = (arr, id) => arr.find((x) => x.id === Number(id));
+const calcHoursValue = (start, end) => {
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const mins = eh * 60 + em - (sh * 60 + sm);
+  return Math.max(0, mins / 60);
+};
+const calcHours = (start, end) => `${calcHoursValue(start, end).toFixed(1)} ч`;
+
+
+function normalizeState(rawState) {
+  const base = rawState && typeof rawState === 'object' ? rawState : {};
+  const merged = {
+    ...seedData,
+    ...base,
+    users: Array.isArray(base.users) ? base.users : seedData.users,
+    trainers: Array.isArray(base.trainers) ? base.trainers : seedData.trainers,
+    classes: Array.isArray(base.classes) ? base.classes : seedData.classes,
+    clients: Array.isArray(base.clients) && base.clients.length ? base.clients : seedData.clients,
+    workLogs: Array.isArray(base.workLogs) && base.workLogs.length ? base.workLogs : seedData.workLogs,
+    candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
+    payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
+    notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+  };
+
+  merged.clients = merged.clients.map((client, index) => ({
+    ...client,
+    membership: client.membership || ['Premium', 'Standard', 'Lite'][index % 3],
+    visits: Number.isFinite(Number(client.visits)) ? Number(client.visits) : 0,
+    lastVisit: client.lastVisit || '2026-02-16',
+  }));
+
+  return merged;
+}
 
 function App() {
   const [db, setDb] = useState(null);
@@ -81,10 +122,10 @@ function App() {
         const response = await fetch(`${API_BASE}/bootstrap`);
         if (!response.ok) throw new Error('bootstrap_failed');
         const payload = await response.json();
-        setDb(payload.state || seedData);
+        setDb(normalizeState(payload.state || seedData));
         setDbReady(true);
       } catch {
-        setDb(seedData);
+        setDb(normalizeState(seedData));
         setDbReady(true);
         setDbError('Не удалось подключиться к БД API. Загружен временный демо-режим.');
       }
@@ -101,6 +142,37 @@ function App() {
     }).catch(() => {});
   }, [db, dbReady]);
 
+  const dashboardMetrics = useMemo(() => {
+    if (!db) {
+      return {
+        revenue: 0,
+        classCount: 0,
+        avgDailyClasses: '0.0',
+        totalPayroll: 0,
+        clientsCount: 0,
+        activeClients: 0,
+        monthlyVisits: 0,
+        avgVisitRate: 0,
+        avgCheck: 0,
+      };
+    }
+
+    const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const classCount = db.classes.length;
+    const clientsCount = db.clients.length;
+    const activeClients = db.clients.filter((c) => c.status === 'Активен').length;
+    const monthlyVisits = db.clients.reduce((sum, c) => sum + Number(c.visits || 0), 0);
+    const avgVisitRate = clientsCount ? (monthlyVisits / clientsCount).toFixed(1) : '0.0';
+    const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
+    const avgCheck = db.payments.length ? Math.round(revenue / db.payments.length) : 0;
+    const totalPayroll = db.trainers.reduce((sum, tr) => {
+      const count = db.classes.filter((c) => c.trainerId === tr.id).length;
+      return sum + count * tr.rate;
+    }, 0);
+
+    return { revenue, classCount, avgDailyClasses, totalPayroll, clientsCount, activeClients, monthlyVisits, avgVisitRate, avgCheck };
+  }, [db]);
+
   if (!dbReady || !db) {
     return (
       <div className="app-root">
@@ -115,17 +187,6 @@ function App() {
   }
 
   const user = db.users.find((u) => u.id === sessionUserId) || null;
-
-  const dashboardMetrics = useMemo(() => {
-    const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const classCount = db.classes.length;
-    const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
-    const totalPayroll = db.trainers.reduce((sum, tr) => {
-      const count = db.classes.filter((c) => c.trainerId === tr.id).length;
-      return sum + count * tr.rate;
-    }, 0);
-    return { revenue, classCount, avgDailyClasses, totalPayroll };
-  }, [db]);
 
   function doLogin(e) {
     e.preventDefault();
@@ -178,7 +239,7 @@ function App() {
         return response.json();
       })
       .then((payload) => {
-        setDb(payload.state);
+        setDb(normalizeState(payload.state));
         setRegisterForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
         setAuthMode('login');
         setAuthMessage({ text: 'Учётная запись создана. Теперь войдите.', type: 'success' });
@@ -203,7 +264,13 @@ function App() {
           <h1>CRM для фитнес-клуба</h1>
         </div>
         <div className="header-meta">
-          <span className="chip">г. Самара, ТЦ ПаркХаус</span>
+          <div className="location-chip" title="Адрес клуба">
+            <span className="location-dot"></span>
+            <div>
+              <small>Флагманский клуб</small>
+              <b>Самара · ТЦ ПаркХаус</b>
+            </div>
+          </div>
           {user && <button className="btn ghost" onClick={logout}>Выйти</button>}
         </div>
       </header>
@@ -211,11 +278,17 @@ function App() {
       {!user ? (
         <section className="auth-layout glass">
           <div className="auth-promo">
-            <h2>Новая авторизация без выбора роли</h2>
+            <p className="auth-kicker">Executive Access</p>
+            <h2>Премиальная авторизация PulsePoint</h2>
             <p>
-              Роль определяется автоматически по учетной записи. Вы можете сразу войти
-              или создать новую учётную запись сотрудника.
+              Вход в CRM с усиленным UX: роль определяется автоматически, а все рабочие
+              сценарии открываются за 1 шаг.
             </p>
+            <div className="auth-highlights">
+              <div><b>24/7</b><span>доступ к данным клуба</span></div>
+              <div><b>1 click</b><span>переключение между модулями</span></div>
+              <div><b>Secure</b><span>проверка учётной записи в API</span></div>
+            </div>
             <ul>
               <li>admin@pulsepoint.club / admin123</li>
               <li>trainer@pulsepoint.club / trainer123</li>
@@ -225,29 +298,53 @@ function App() {
           </div>
 
           <div className="auth-box">
+            <p className="auth-box-title">Доступ сотрудника</p>
+            <p className="auth-box-subtitle">Все элементы формы выстроены сверху вниз для быстрого ввода.</p>
+
             <div className="switch-row">
               <button type="button" className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>
               <button type="button" className={`btn ${authMode === 'register' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('register')}>Новая учётка</button>
             </div>
 
             {authMode === 'login' ? (
-              <form className="form-grid" onSubmit={doLogin}>
-                <input placeholder="Email" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
-                <input type="password" placeholder="Пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
-                <button className="btn primary" type="submit">Войти</button>
+              <form className="auth-form-stack" onSubmit={doLogin}>
+                <label className="field-label">
+                  Email
+                  <input placeholder="name@pulsepoint.club" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Пароль
+                  <input type="password" placeholder="Введите пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
+                </label>
+                <button className="btn primary" type="submit">Войти в CRM</button>
               </form>
             ) : (
-              <form className="form-grid" onSubmit={doRegister}>
-                <input placeholder="ФИО" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
-                <input placeholder="Email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
-                <input placeholder="Телефон" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} />
-                <input type="password" placeholder="Пароль" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
-                <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}>
-                  <option value="trainer">Тренер</option>
-                  <option value="hr">HR</option>
-                  <option value="accountant">Бухгалтер</option>
-                  <option value="admin">Администратор</option>
-                </select>
+              <form className="auth-form-stack" onSubmit={doRegister}>
+                <label className="field-label">
+                  ФИО
+                  <input placeholder="Иванов Иван Иванович" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Email
+                  <input placeholder="name@pulsepoint.club" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Телефон
+                  <input placeholder="+7 900 000-00-00" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Пароль
+                  <input type="password" placeholder="Создайте пароль" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
+                </label>
+                <label className="field-label">
+                  Роль сотрудника
+                  <select value={registerForm.role} onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}>
+                    <option value="trainer">Тренер</option>
+                    <option value="hr">HR</option>
+                    <option value="accountant">Бухгалтер</option>
+                    <option value="admin">Администратор</option>
+                  </select>
+                </label>
                 <button className="btn primary" type="submit">Создать учётку</button>
               </form>
             )}
@@ -320,8 +417,12 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
       <>
         <Card>
           <h3>Ключевые показатели клуба</h3>
-          <div className="metrics">
+          <div className="metrics metrics-rich">
             <Metric label="Выручка" value={money(metrics.revenue)} />
+            <Metric label="Средний чек" value={money(metrics.avgCheck)} />
+            <Metric label="Активные клиенты" value={`${metrics.activeClients}/${metrics.clientsCount}`} />
+            <Metric label="Посещений / месяц" value={metrics.monthlyVisits} />
+            <Metric label="Средняя посещаемость" value={`${metrics.avgVisitRate} на клиента`} />
             <Metric label="Тренеров" value={db.trainers.length} />
             <Metric label="Занятий" value={metrics.classCount} />
             <Metric label="Средняя нагрузка / день" value={metrics.avgDailyClasses} />
@@ -331,6 +432,16 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
         <Card>
           <h3>Нагрузка тренеров (диаграмма)</h3>
           <LoadBars db={db} />
+        </Card>
+        <Card>
+          <h3>Топ клиентов по посещениям</h3>
+          <DataTable
+            headers={['Клиент', 'Абонемент', 'Посещения', 'Последний визит', 'Статус']}
+            rows={[...db.clients]
+              .sort((a, b) => Number(b.visits || 0) - Number(a.visits || 0))
+              .slice(0, 6)
+              .map((c) => [c.name, c.membership || '—', Number(c.visits || 0), c.lastVisit || '—', c.status])}
+          />
         </Card>
       </>
     );
@@ -423,6 +534,18 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
           headers={['Сотрудник', 'Роль', 'Email', 'Телефон']}
           rows={db.users.map((u) => [u.name, roleLabels[u.role], u.email, u.phone || '-'])}
         />
+        <h3>Счётчики посещений клиентов</h3>
+        <DataTable
+          headers={['Клиент', 'Абонемент', 'Тренер', 'Посещения', 'Последний визит', 'Статус']}
+          rows={db.clients.map((c) => [
+            c.name,
+            c.membership || '—',
+            byId(db.trainers, c.trainerId)?.name || '—',
+            Number(c.visits || 0),
+            c.lastVisit || '—',
+            c.status,
+          ])}
+        />
       </Card>
     );
   }
@@ -493,6 +616,10 @@ function TrainerDashboard({ tab, db, setDb, user }) {
     return (
       <Card>
         <h3>Мои клиенты и заметки</h3>
+        <DataTable
+          headers={['Клиент', 'Программа', 'Посещения', 'Последний визит', 'Статус']}
+          rows={myClients.map((c) => [c.name, c.program, Number(c.visits || 0), c.lastVisit || '—', c.status])}
+        />
         <form className="form-grid" onSubmit={(e) => {
           e.preventDefault();
           if (!note.client || !note.text) return;
@@ -584,8 +711,8 @@ function HRDashboard({ tab, db, setDb }) {
         headers={['Тренер', 'Количество смен', 'Часы']}
         rows={db.trainers.map((t) => {
           const logs = db.workLogs.filter((w) => w.trainerId === t.id);
-          const hours = logs.reduce((sum, w) => sum + Number(calcHours(w.start, w.end)), 0);
-          return [t.name, logs.length, `${hours} ч`];
+          const hours = logs.reduce((sum, w) => sum + calcHoursValue(w.start, w.end), 0);
+          return [t.name, logs.length, `${hours.toFixed(1)} ч`];
         })}
       />
     </Card>
@@ -771,13 +898,6 @@ function LoadCalendar({ db }) {
       </div>
     </div>
   );
-}
-
-function calcHours(start, end) {
-  const [sh, sm] = start.split(':').map(Number);
-  const [eh, em] = end.split(':').map(Number);
-  const mins = eh * 60 + em - (sh * 60 + sm);
-  return `${Math.max(0, mins / 60).toFixed(1)} ч`;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
