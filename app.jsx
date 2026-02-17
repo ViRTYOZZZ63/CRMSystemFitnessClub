@@ -295,7 +295,7 @@ function App() {
 
             <div className="switch-row">
               <button type="button" className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>
-              <button type="button" className={`btn ${authMode === 'register' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('register')}>Новая учётка</button>
+              <button type="button" className={`btn ${authMode === 'register' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('register')}>Новый аккаунт</button>
             </div>
 
             {authMode === 'login' ? (
@@ -337,7 +337,7 @@ function App() {
                     <option value="admin">Администратор</option>
                   </select>
                 </label>
-                <button className="btn primary" type="submit">Создать учётку</button>
+                <button className="btn primary" type="submit">Создать аккаунт</button>
               </form>
             )}
             <p className={`status ${authMessage.type}`}>{authMessage.text}</p>
