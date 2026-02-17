@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import json
 import sqlite3
+from functools import partial
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
-DB_PATH = Path('crm.db')
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / 'crm.db'
 
 SEED_STATE = {
     "users": [
@@ -134,6 +136,6 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     init_db()
-    server = ThreadingHTTPServer(("0.0.0.0", 4173), Handler)
+    server = ThreadingHTTPServer(("0.0.0.0", 4173), partial(Handler, directory=str(BASE_DIR)))
     print("Serving on http://0.0.0.0:4173")
     server.serve_forever()
