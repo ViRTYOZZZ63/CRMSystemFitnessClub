@@ -101,6 +101,21 @@ function App() {
     }).catch(() => {});
   }, [db, dbReady]);
 
+  const dashboardMetrics = useMemo(() => {
+    if (!db) {
+      return { revenue: 0, classCount: 0, avgDailyClasses: '0.0', totalPayroll: 0 };
+    }
+
+    const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const classCount = db.classes.length;
+    const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
+    const totalPayroll = db.trainers.reduce((sum, tr) => {
+      const count = db.classes.filter((c) => c.trainerId === tr.id).length;
+      return sum + count * tr.rate;
+    }, 0);
+    return { revenue, classCount, avgDailyClasses, totalPayroll };
+  }, [db]);
+
   if (!dbReady || !db) {
     return (
       <div className="app-root">
@@ -115,17 +130,6 @@ function App() {
   }
 
   const user = db.users.find((u) => u.id === sessionUserId) || null;
-
-  const dashboardMetrics = useMemo(() => {
-    const revenue = db.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const classCount = db.classes.length;
-    const avgDailyClasses = classCount ? (classCount / 7).toFixed(1) : '0.0';
-    const totalPayroll = db.trainers.reduce((sum, tr) => {
-      const count = db.classes.filter((c) => c.trainerId === tr.id).length;
-      return sum + count * tr.rate;
-    }, 0);
-    return { revenue, classCount, avgDailyClasses, totalPayroll };
-  }, [db]);
 
   function doLogin(e) {
     e.preventDefault();
