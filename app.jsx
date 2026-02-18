@@ -58,7 +58,9 @@ const seedData = {
       title: 'TABATA',
       level: 'Высокоинтенсивная интервальная тренировка',
       description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
-      image: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
+      mediaType: 'video',
+      media: 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4',
+      poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
     },
   ],
 };
@@ -111,6 +113,18 @@ function normalizeState(rawState) {
     visits: Number.isFinite(Number(client.visits)) ? Number(client.visits) : 0,
     lastVisit: client.lastVisit || '2026-02-16',
   }));
+
+  merged.workoutsArchive = merged.workoutsArchive.map((item) => {
+    const tabataVideo = 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4';
+    const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+    const hasVideoSource = /\.(mp4|webm)(\?|$)/i.test(String(item.media || ''));
+    return {
+      ...item,
+      mediaType: isTabata ? 'video' : item.mediaType || (item.media ? 'video' : 'image'),
+      media: isTabata ? (hasVideoSource ? item.media : tabataVideo) : item.media || item.image || '',
+      poster: item.poster || item.image || '',
+    };
+  });
 
   return merged;
 }
@@ -617,16 +631,33 @@ function TrainerDashboard({ tab, db, setDb, user }) {
         <Card>
           <h3>Архив тренировок</h3>
           <div className="workout-archive-grid">
-            {myArchive.map((item) => (
-              <article key={item.id} className="workout-archive-item">
-                <img src={item.image} alt={item.title} className="workout-archive-image" loading="lazy" />
-                <div>
-                  <h4>{item.title}</h4>
-                  <p className="workout-archive-level">{item.level}</p>
-                  <p>{item.description}</p>
-                </div>
-              </article>
-            ))}
+            {myArchive.map((item) => {
+              const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+              const shouldShowVideo = item.mediaType === 'video' || isTabata;
+              return (
+                <article key={item.id} className="workout-archive-item">
+                  {shouldShowVideo ? (
+                    <video
+                      src={item.media}
+                      poster={item.poster}
+                      className="workout-archive-image"
+                      controls
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
+                  )}
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p className="workout-archive-level">{item.level}</p>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </Card>
       </>
