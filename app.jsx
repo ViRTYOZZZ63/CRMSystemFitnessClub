@@ -59,7 +59,7 @@ const seedData = {
       level: 'Высокоинтенсивная интервальная тренировка',
       description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
       mediaType: 'video',
-      media: 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4',
+      media: '/media/IMG_1573.MP4',
       poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
     },
   ],
@@ -115,7 +115,7 @@ function normalizeState(rawState) {
   }));
 
   merged.workoutsArchive = merged.workoutsArchive.map((item) => {
-    const tabataVideo = 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4';
+    const tabataVideo = '/media/IMG_1573.MP4';
     const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
     const media = String(item.media || item.image || '').trim();
     const mediaType = item.mediaType || (isTabata || media ? 'video' : 'image');
