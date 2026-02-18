@@ -2,6 +2,14 @@ const { useMemo, useState, useEffect } = React;
 
 const API_BASE = '/api';
 
+const TABATA_VIDEO_FALLBACKS = [
+  '/media/tabata.mp4',
+  'media/tabata.mp4',
+  '/media/tabata.webm',
+  'media/tabata.webm',
+  'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4',
+];
+
 const seedData = {
   users: [
     { id: 1, name: 'Анна Петрова', email: 'admin@pulsepoint.club', password: 'admin123', role: 'admin', phone: '+7 927 101-22-33' },
@@ -51,6 +59,18 @@ const seedData = {
     { id: 5, client: 'Алена Журавлева', amount: 7900, method: 'Онлайн', date: '2026-02-17' },
   ],
   notes: [],
+  workoutsArchive: [
+    {
+      id: 1,
+      trainerId: 1,
+      title: 'TABATA',
+      level: 'Высокоинтенсивная интервальная тренировка',
+      description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
+      mediaType: 'video',
+      media: '/media/tabata.mp4',
+      poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
+    },
+  ],
 };
 
 const roleLabels = {
@@ -92,6 +112,7 @@ function normalizeState(rawState) {
     candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
     payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
     notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+    workoutsArchive: Array.isArray(base.workoutsArchive) ? base.workoutsArchive : seedData.workoutsArchive,
   };
 
   merged.clients = merged.clients.map((client, index) => ({
@@ -101,7 +122,32 @@ function normalizeState(rawState) {
     lastVisit: client.lastVisit || '2026-02-16',
   }));
 
+  merged.workoutsArchive = merged.workoutsArchive.map((item) => {
+    const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+    const media = String(item.media || item.image || '').trim();
+    const mediaType = item.mediaType || (isTabata || media ? 'video' : 'image');
+    return {
+      ...item,
+      mediaType,
+      media: media || (isTabata ? TABATA_VIDEO_FALLBACKS[0] : ''),
+      poster: item.poster || item.image || '',
+    };
+  });
+
   return merged;
+}
+
+function getMediaTypeFromUrl(url) {
+  if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+  if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+  return undefined;
+}
+
+function getArchiveVideoSources(item) {
+  const base = [item.media];
+  const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+  const sources = isTabata ? [...base, ...TABATA_VIDEO_FALLBACKS] : base;
+  return [...new Set(sources.filter(Boolean).map((src) => String(src).trim()).filter(Boolean))];
 }
 
 function App() {
@@ -561,6 +607,7 @@ function TrainerDashboard({ tab, db, setDb, user }) {
   const myClasses = db.classes.filter((c) => c.trainerId === myTrainer.id);
   const myClients = db.clients.filter((c) => c.trainerId === myTrainer.id);
   const myWork = db.workLogs.filter((w) => w.trainerId === myTrainer.id);
+  const myArchive = db.workoutsArchive.filter((item) => item.trainerId === myTrainer.id);
   const [note, setNote] = useState({ client: '', text: '' });
 
   if (tab === 'Панель') {
@@ -588,19 +635,55 @@ function TrainerDashboard({ tab, db, setDb, user }) {
 
   if (tab === 'Мои занятия') {
     return (
-      <Card>
-        <h3>Управление занятиями</h3>
-        <DataTable
-          headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
-          rows={myClasses.map((c) => [
-            c.date,
-            c.time,
-            c.title,
-            c.done ? 'Проведено' : 'Запланировано',
-            <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
-          ])}
-        />
-      </Card>
+      <>
+        <Card>
+          <h3>Управление занятиями</h3>
+          <DataTable
+            headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
+            rows={myClasses.map((c) => [
+              c.date,
+              c.time,
+              c.title,
+              c.done ? 'Проведено' : 'Запланировано',
+              <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
+            ])}
+          />
+        </Card>
+        <Card>
+          <h3>Архив тренировок</h3>
+          <div className="workout-archive-grid">
+            {myArchive.map((item) => {
+              const shouldShowVideo = item.mediaType === 'video';
+              return (
+                <article key={item.id} className="workout-archive-item">
+                  {shouldShowVideo ? (
+                    <video
+                      poster={item.poster}
+                      className="workout-archive-image"
+                      controls
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    >
+                      {getArchiveVideoSources(item).map((source) => (
+                        <source key={source} src={source} type={getMediaTypeFromUrl(source)} />
+                      ))}
+                    </video>
+                  ) : (
+                    <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
+                  )}
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p className="workout-archive-level">{item.level}</p>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </Card>
+      </>
     );
   }
 
