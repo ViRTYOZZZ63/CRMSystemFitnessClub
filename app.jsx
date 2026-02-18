@@ -51,6 +51,18 @@ const seedData = {
     { id: 5, client: 'Алена Журавлева', amount: 7900, method: 'Онлайн', date: '2026-02-17' },
   ],
   notes: [],
+  workoutsArchive: [
+    {
+      id: 1,
+      trainerId: 1,
+      title: 'TABATA',
+      level: 'Высокоинтенсивная интервальная тренировка',
+      description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
+      mediaType: 'video',
+      media: 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4',
+      poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
+    },
+  ],
 };
 
 const roleLabels = {
@@ -92,6 +104,7 @@ function normalizeState(rawState) {
     candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
     payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
     notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+    workoutsArchive: Array.isArray(base.workoutsArchive) ? base.workoutsArchive : seedData.workoutsArchive,
   };
 
   merged.clients = merged.clients.map((client, index) => ({
@@ -100,6 +113,18 @@ function normalizeState(rawState) {
     visits: Number.isFinite(Number(client.visits)) ? Number(client.visits) : 0,
     lastVisit: client.lastVisit || '2026-02-16',
   }));
+
+  merged.workoutsArchive = merged.workoutsArchive.map((item) => {
+    const tabataVideo = 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4';
+    const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+    const hasVideoSource = /\.(mp4|webm)(\?|$)/i.test(String(item.media || ''));
+    return {
+      ...item,
+      mediaType: isTabata ? 'video' : item.mediaType || (item.media ? 'video' : 'image'),
+      media: isTabata ? (hasVideoSource ? item.media : tabataVideo) : item.media || item.image || '',
+      poster: item.poster || item.image || '',
+    };
+  });
 
   return merged;
 }
@@ -561,6 +586,7 @@ function TrainerDashboard({ tab, db, setDb, user }) {
   const myClasses = db.classes.filter((c) => c.trainerId === myTrainer.id);
   const myClients = db.clients.filter((c) => c.trainerId === myTrainer.id);
   const myWork = db.workLogs.filter((w) => w.trainerId === myTrainer.id);
+  const myArchive = db.workoutsArchive.filter((item) => item.trainerId === myTrainer.id);
   const [note, setNote] = useState({ client: '', text: '' });
 
   if (tab === 'Панель') {
@@ -588,19 +614,53 @@ function TrainerDashboard({ tab, db, setDb, user }) {
 
   if (tab === 'Мои занятия') {
     return (
-      <Card>
-        <h3>Управление занятиями</h3>
-        <DataTable
-          headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
-          rows={myClasses.map((c) => [
-            c.date,
-            c.time,
-            c.title,
-            c.done ? 'Проведено' : 'Запланировано',
-            <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
-          ])}
-        />
-      </Card>
+      <>
+        <Card>
+          <h3>Управление занятиями</h3>
+          <DataTable
+            headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
+            rows={myClasses.map((c) => [
+              c.date,
+              c.time,
+              c.title,
+              c.done ? 'Проведено' : 'Запланировано',
+              <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
+            ])}
+          />
+        </Card>
+        <Card>
+          <h3>Архив тренировок</h3>
+          <div className="workout-archive-grid">
+            {myArchive.map((item) => {
+              const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+              const shouldShowVideo = item.mediaType === 'video' || isTabata;
+              return (
+                <article key={item.id} className="workout-archive-item">
+                  {shouldShowVideo ? (
+                    <video
+                      src={item.media}
+                      poster={item.poster}
+                      className="workout-archive-image"
+                      controls
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
+                  )}
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p className="workout-archive-level">{item.level}</p>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </Card>
+      </>
     );
   }
 

@@ -46,6 +46,18 @@ SEED_STATE = {
         {"id": 3, "client": "Виктор Осипов", "amount": 18900, "method": "Онлайн", "date": "2026-02-16"},
     ],
     "notes": [],
+    "workoutsArchive": [
+        {
+            "id": 1,
+            "trainerId": 1,
+            "title": "TABATA",
+            "level": "Высокоинтенсивная интервальная тренировка",
+            "description": "ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.",
+            "mediaType": "video",
+            "media": "https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4",
+            "poster": "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80",
+        }
+    ],
 }
 
 
