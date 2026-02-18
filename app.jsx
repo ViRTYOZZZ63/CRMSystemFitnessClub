@@ -117,11 +117,12 @@ function normalizeState(rawState) {
   merged.workoutsArchive = merged.workoutsArchive.map((item) => {
     const tabataVideo = 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4';
     const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
-    const hasVideoSource = /\.(mp4|webm)(\?|$)/i.test(String(item.media || ''));
+    const media = String(item.media || item.image || '').trim();
+    const mediaType = item.mediaType || (isTabata || media ? 'video' : 'image');
     return {
       ...item,
-      mediaType: isTabata ? 'video' : item.mediaType || (item.media ? 'video' : 'image'),
-      media: isTabata ? (hasVideoSource ? item.media : tabataVideo) : item.media || item.image || '',
+      mediaType,
+      media: media || (isTabata ? tabataVideo : ''),
       poster: item.poster || item.image || '',
     };
   });
@@ -632,8 +633,7 @@ function TrainerDashboard({ tab, db, setDb, user }) {
           <h3>Архив тренировок</h3>
           <div className="workout-archive-grid">
             {myArchive.map((item) => {
-              const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
-              const shouldShowVideo = item.mediaType === 'video' || isTabata;
+              const shouldShowVideo = item.mediaType === 'video';
               return (
                 <article key={item.id} className="workout-archive-item">
                   {shouldShowVideo ? (
