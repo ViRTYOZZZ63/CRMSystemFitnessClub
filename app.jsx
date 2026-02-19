@@ -2,12 +2,25 @@ const { useMemo, useState, useEffect } = React;
 
 const API_BASE = '/api';
 
+const ARCHIVE_MEDIA_FALLBACKS = {
+  TABATA: ['/media/tabata.mp4', 'media/tabata.mp4', '/media/tabata.webm', 'media/tabata.webm', 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4'],
+  'MUSCLE TONING (MT)': ['/media/muscle-toning-mt.mp4', '/media/muscle-toning-mt.webm'],
+  'TRX MIX': ['/media/trx-mix.mp4', '/media/trx-mix.webm'],
+  'FIT FOR JUNIORS': ['/media/fit-for-juniors.mp4', '/media/fit-for-juniors.webm'],
+  PILATES: ['/media/pilates.mp4', '/media/pilates.webm'],
+  STRETCHING: ['/media/stretching.mp4', '/media/stretching.webm'],
+};
+
 const seedData = {
   users: [
     { id: 1, name: 'Анна Петрова', email: 'admin@pulsepoint.club', password: 'admin123', role: 'admin', phone: '+7 927 101-22-33' },
     { id: 2, name: 'Алексей Волков', email: 'trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 1, phone: '+7 927 102-33-44' },
     { id: 3, name: 'Мария Исаева', email: 'hr@pulsepoint.club', password: 'hr123', role: 'hr', phone: '+7 927 103-44-55' },
     { id: 4, name: 'Ольга Соколова', email: 'finance@pulsepoint.club', password: 'finance123', role: 'accountant', phone: '+7 927 104-55-66' },
+    { id: 5, name: 'Марина Громова', email: 'marina.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 2, phone: '+7 927 105-11-22' },
+    { id: 6, name: 'Артем Беляев', email: 'artem.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 3, phone: '+7 927 106-22-33' },
+    { id: 7, name: 'Егор Титов', email: 'egor.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 4, phone: '+7 927 107-33-44' },
+    { id: 8, name: 'Ксения Левина', email: 'ksenia.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 5, phone: '+7 927 108-44-55' },
   ],
   trainers: [
     { id: 1, name: 'Алексей Волков', spec: 'Силовой тренинг', level: 'Senior', maxDailySlots: 4, rate: 2200 },
@@ -22,6 +35,13 @@ const seedData = {
     { id: 3, title: 'CrossFit Pro', trainerId: 3, date: '2026-02-17', time: '20:00', duration: 75, capacity: 10, room: 'A', done: false },
     { id: 4, title: 'Mobility Flow', trainerId: 4, date: '2026-02-17', time: '17:00', duration: 50, capacity: 16, room: 'C', done: false },
     { id: 5, title: 'Recovery Yoga', trainerId: 5, date: '2026-02-18', time: '19:30', duration: 60, capacity: 20, room: 'B', done: false },
+    { id: 6, title: 'TRX MIX', trainerId: 2, date: '2026-02-18', time: '12:30', duration: 55, capacity: 16, room: 'A', done: true },
+    { id: 7, title: 'TABATA Express', trainerId: 1, date: '2026-02-19', time: '09:15', duration: 45, capacity: 14, room: 'B', done: true },
+    { id: 8, title: 'Pilates Core', trainerId: 5, date: '2026-02-19', time: '18:00', duration: 60, capacity: 18, room: 'C', done: false },
+    { id: 9, title: 'Mobility Reset', trainerId: 4, date: '2026-02-20', time: '17:30', duration: 50, capacity: 18, room: 'C', done: false },
+    { id: 10, title: 'Strength Base', trainerId: 3, date: '2026-02-20', time: '20:15', duration: 70, capacity: 12, room: 'A', done: false },
+    { id: 11, title: 'Fit For Juniors', trainerId: 1, date: '2026-02-21', time: '11:00', duration: 60, capacity: 10, room: 'B', done: false },
+    { id: 12, title: 'Stretch & Recover', trainerId: 5, date: '2026-02-21', time: '19:15', duration: 55, capacity: 20, room: 'C', done: false },
   ],
   clients: [
     { id: 1, name: 'Екатерина Морозова', program: 'Body Rebuild', trainerId: 1, status: 'Активен', membership: 'Premium', visits: 16, lastVisit: '2026-02-16' },
@@ -30,6 +50,16 @@ const seedData = {
     { id: 4, name: 'Виктор Осипов', program: 'CrossFit Start', trainerId: 3, status: 'Активен', membership: 'Premium', visits: 13, lastVisit: '2026-02-16' },
     { id: 5, name: 'Алена Журавлева', program: 'Recovery Mobility', trainerId: 4, status: 'Активен', membership: 'Lite', visits: 8, lastVisit: '2026-02-14' },
     { id: 6, name: 'Михаил Лисин', program: 'Yoga Balance', trainerId: 5, status: 'Активен', membership: 'Premium', visits: 19, lastVisit: '2026-02-16' },
+    { id: 7, name: 'Дмитрий Мезенцев', program: 'TRX Start', trainerId: 2, status: 'Активен', membership: 'Standard', visits: 14, lastVisit: '2026-02-17' },
+    { id: 8, name: 'Тимур Низамов', program: 'CrossFit Engine', trainerId: 3, status: 'Активен', membership: 'Premium', visits: 22, lastVisit: '2026-02-18' },
+    { id: 9, name: 'Ангелина Тарасова', program: 'Pilates Mobility', trainerId: 5, status: 'Активен', membership: 'Standard', visits: 10, lastVisit: '2026-02-17' },
+    { id: 10, name: 'Савелий Виноградов', program: 'Junior Athletic', trainerId: 1, status: 'Активен', membership: 'Lite', visits: 9, lastVisit: '2026-02-16' },
+    { id: 11, name: 'Ника Орлова', program: 'Stretch & Balance', trainerId: 4, status: 'Пауза', membership: 'Standard', visits: 7, lastVisit: '2026-02-11' },
+    { id: 12, name: 'Полина Дьякова', program: 'Mass Gain Pro', trainerId: 1, status: 'Активен', membership: 'Premium', visits: 25, lastVisit: '2026-02-18' },
+    { id: 13, name: 'Станислав Гринько', program: 'Functional Reload', trainerId: 2, status: 'Активен', membership: 'Lite', visits: 8, lastVisit: '2026-02-15' },
+    { id: 14, name: 'Лев Смирнов', program: 'Mobility Office', trainerId: 4, status: 'Активен', membership: 'Standard', visits: 12, lastVisit: '2026-02-18' },
+    { id: 15, name: 'Роман Кудрин', program: 'CrossFit Start', trainerId: 3, status: 'Активен', membership: 'Standard', visits: 15, lastVisit: '2026-02-18' },
+    { id: 16, name: 'Яна Белова', program: 'Yoga Recovery', trainerId: 5, status: 'Активен', membership: 'Premium', visits: 18, lastVisit: '2026-02-18' },
   ],
   workLogs: [
     { id: 1, trainerId: 1, date: '2026-02-16', start: '07:30', end: '16:30' },
@@ -37,6 +67,11 @@ const seedData = {
     { id: 3, trainerId: 3, date: '2026-02-17', start: '13:00', end: '22:00' },
     { id: 4, trainerId: 4, date: '2026-02-17', start: '09:00', end: '18:00' },
     { id: 5, trainerId: 5, date: '2026-02-18', start: '11:00', end: '20:00' },
+    { id: 6, trainerId: 1, date: '2026-02-19', start: '08:00', end: '16:00' },
+    { id: 7, trainerId: 2, date: '2026-02-19', start: '11:30', end: '20:30' },
+    { id: 8, trainerId: 3, date: '2026-02-19', start: '12:00', end: '21:00' },
+    { id: 9, trainerId: 4, date: '2026-02-20', start: '09:30', end: '18:00' },
+    { id: 10, trainerId: 5, date: '2026-02-20', start: '10:30', end: '19:30' },
   ],
   candidates: [
     { id: 1, name: 'Ирина Соколова', position: 'Тренер групповых программ', stage: 'Собеседование' },
@@ -49,8 +84,80 @@ const seedData = {
     { id: 3, client: 'Виктор Осипов', amount: 18900, method: 'Онлайн', date: '2026-02-16' },
     { id: 4, client: 'Михаил Лисин', amount: 12500, method: 'Карта', date: '2026-02-16' },
     { id: 5, client: 'Алена Журавлева', amount: 7900, method: 'Онлайн', date: '2026-02-17' },
+    { id: 6, client: 'Дмитрий Мезенцев', amount: 10900, method: 'Карта', date: '2026-02-17' },
+    { id: 7, client: 'Тимур Низамов', amount: 19900, method: 'Онлайн', date: '2026-02-18' },
+    { id: 8, client: 'Полина Дьякова', amount: 21900, method: 'Карта', date: '2026-02-18' },
+    { id: 9, client: 'Лев Смирнов', amount: 9900, method: 'Наличные', date: '2026-02-18' },
+    { id: 10, client: 'Яна Белова', amount: 15900, method: 'Онлайн', date: '2026-02-19' },
+    { id: 11, client: 'Роман Кудрин', amount: 13900, method: 'Карта', date: '2026-02-19' },
+    { id: 12, client: 'Станислав Гринько', amount: 8900, method: 'Онлайн', date: '2026-02-19' },
+    { id: 13, client: 'Ника Орлова', amount: 6900, method: 'Карта', date: '2026-02-20' },
+    { id: 14, client: 'Ангелина Тарасова', amount: 11900, method: 'Наличные', date: '2026-02-20' },
+    { id: 15, client: 'Савелий Виноградов', amount: 7200, method: 'Карта', date: '2026-02-20' },
   ],
   notes: [],
+  workoutsArchive: [
+    {
+      id: 1,
+      trainerId: 1,
+      title: 'TABATA',
+      level: 'Высокоинтенсивная интервальная тренировка',
+      description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
+      mediaType: 'video',
+      media: '/media/tabata.mp4',
+      poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 2,
+      trainerId: 1,
+      title: 'MUSCLE TONING (MT)',
+      level: 'Классическая силовая тренировка',
+      description: 'ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ пОДГотовКИ.',
+      mediaType: 'video',
+      media: '/media/muscle-toning-mt.mp4',
+      poster: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 3,
+      trainerId: 1,
+      title: 'TRX MIX',
+      level: 'Функциональный тренинг',
+      description: 'ЭТО функциональная тренировка с использованием подвесных петель. Подходит для всех уровней подготовленности.МЫ ДОБАВИЛИ ИНТЕНСИВНОСТИ ПРИВЫЧНЫМ ДВИЖЕНИЯМ И СДЕЛАЛИ УРОК МАКСИМАЛЬНО ЭФФЕКТИВНЫМ.',
+      mediaType: 'video',
+      media: '/media/trx-mix.mp4',
+      poster: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 4,
+      trainerId: 1,
+      title: 'FIT FOR JUNIORS',
+      level: '12-16 лет',
+      description: 'ЭТО ЗАНЯТИЕ В ТРЕНАЖЁРНОМ ЗАЛЕ ПОД КОНТРОЛЕМ ОПЫТНОГО ПЕРСОНАЛЬНОГО ТРЕНЕРА. ЗДЕСЬ ОЧЕНЬ ИНТЕРЕСНО, ВЕДЬ ВАШЕМУ РЕБЁНКУ ВСЕГДА ХОЧЕТСЯ ПОХОДИТЬ ПО БЕГОВОЙ ДОРОЖКЕ, ПОДНЯТЬ ШТАНГУ, ПОДЕРЖАТЬ В РУКАХ ГАНТЕЛИ. ЗДЕСЬ ЭТО МОЖНО СДЕЛАТЬ С ПОЛЬЗОЙ ДЛЯ ДЕЛА, А НЕ ПРОСТО ТАК, ПОТОМУ ЧТО «ХОЧУ». ЗДЕСЬ БУДЕТ РЕЗУЛЬТАТ',
+      mediaType: 'video',
+      media: '/media/fit-for-juniors.mp4',
+      poster: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 5,
+      trainerId: 1,
+      title: 'PILATES',
+      level: 'Здоровая спина и суставы',
+      description: 'ЭТО НАПРАВЛЕНИЕ ОЧЕНЬ ПОЛЕЗНО ДЛЯ МЫШЦ СПИНЫ И ДЛЯ «УКРЕПЛЕНИЯ» ПОЗВОНОЧНИКА. СЛУЖИТ ОТЛИЧНОЙ ПРОФИЛАКТИКОЙ ЗАБОЛЕВАНИЙ ПОЗВОНОЧНИКА И суставов',
+      mediaType: 'video',
+      media: '/media/pilates.mp4',
+      poster: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 6,
+      trainerId: 1,
+      title: 'STRETCHING',
+      level: 'Гибкость и восстановление',
+      description: 'ЭТО СПОКОЙНОЕ, МЕДЛЕННОЕ, НО ОЧЕНЬ ПОЛЕЗНОЕ ДЛЯ ВАШИХ МЫШЦ НАПРАВЛЕНИЕ УЛУЧШИТ ГИБКОСТЬ, ПОДВИЖНОСТЬ, ЭЛАСТИЧНОСТЬ МЫШЦ, СВЯЗОК, СУСТАВОВ. ОБЕСПЕЧИТ СНАБЖЕНИЕ КРОВЬЮ И КИСЛОРОДОМ РАБОТАЮЩИЕ МЫШЦЫ, ТЕМ САМЫМ ОКАЖЕТ ОЧЕНЬ ПОЛЕЗНОЕ ВЛИЯНИЕ НА НИХ. УСКОРИТ ВОССТАНОВЛЕНИЕ ПОСЛЕ СИЛОВЫХ ТРЕНИРОВОК.',
+      mediaType: 'video',
+      media: '/media/stretching.mp4',
+      poster: 'https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1200&q=80',
+    },
+  ],
 };
 
 const roleLabels = {
@@ -92,7 +199,39 @@ function normalizeState(rawState) {
     candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
     payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
     notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+    workoutsArchive: Array.isArray(base.workoutsArchive) ? base.workoutsArchive : seedData.workoutsArchive,
   };
+
+  const mergeById = (current, defaults) => {
+    const map = new Map((Array.isArray(current) ? current : []).map((item) => [Number(item.id), item]));
+    (Array.isArray(defaults) ? defaults : []).forEach((item) => {
+      if (!map.has(Number(item.id))) map.set(Number(item.id), item);
+    });
+    return [...map.values()];
+  };
+
+  merged.users = mergeById(merged.users, seedData.users);
+  merged.trainers = mergeById(merged.trainers, seedData.trainers);
+  merged.classes = mergeById(merged.classes, seedData.classes);
+  merged.clients = mergeById(merged.clients, seedData.clients);
+  merged.workLogs = mergeById(merged.workLogs, seedData.workLogs);
+  merged.payments = mergeById(merged.payments, seedData.payments);
+
+  merged.users = Array.isArray(merged.users) ? [...merged.users] : [];
+  merged.trainers.forEach((trainer) => {
+    const linked = merged.users.find((u) => u.role === 'trainer' && Number(u.trainerId) === Number(trainer.id));
+    if (linked) return;
+    const slug = String(trainer.name || '').toLowerCase().replace(/[^a-zа-я0-9]+/gi, '.').replace(/^\.|\.$/g, '');
+    merged.users.push({
+      id: nextId(merged.users),
+      name: trainer.name,
+      email: `${slug || `trainer.${trainer.id}`}@pulsepoint.club`,
+      password: 'trainer123',
+      role: 'trainer',
+      trainerId: trainer.id,
+      phone: '',
+    });
+  });
 
   merged.clients = merged.clients.map((client, index) => ({
     ...client,
@@ -101,7 +240,41 @@ function normalizeState(rawState) {
     lastVisit: client.lastVisit || '2026-02-16',
   }));
 
+  const archiveByTitle = new Map((Array.isArray(merged.workoutsArchive) ? merged.workoutsArchive : []).map((item) => [String(item.title || '').trim().toUpperCase(), item]));
+  seedData.workoutsArchive.forEach((item) => {
+    const key = String(item.title || '').trim().toUpperCase();
+    if (!archiveByTitle.has(key)) archiveByTitle.set(key, item);
+  });
+
+  merged.workoutsArchive = [...archiveByTitle.values()].map((item) => {
+    const media = String(item.media || item.image || '').trim();
+    const fallbackSources = getArchiveFallbackSources(item.title);
+    const mediaType = item.mediaType || (fallbackSources.length || media ? 'video' : 'image');
+    return {
+      ...item,
+      mediaType,
+      media: media || fallbackSources[0] || '',
+      poster: item.poster || item.image || '',
+    };
+  });
+
   return merged;
+}
+
+function getMediaTypeFromUrl(url) {
+  if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+  if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+  return undefined;
+}
+
+function getArchiveFallbackSources(title) {
+  return ARCHIVE_MEDIA_FALLBACKS[String(title || '').trim().toUpperCase()] || [];
+}
+
+function getArchiveVideoSources(item) {
+  const base = [item.media];
+  const sources = [...base, ...getArchiveFallbackSources(item.title)];
+  return [...new Set(sources.filter(Boolean).map((src) => String(src).trim()).filter(Boolean))];
 }
 
 function App() {
@@ -403,6 +576,16 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
   const [trainerForm, setTrainerForm] = useState({ name: '', spec: '', level: 'Middle', maxDailySlots: 4, rate: 2000 });
   const [classForm, setClassForm] = useState({ title: '', trainerId: db.trainers[0]?.id || 1, date: '2026-02-20', time: '10:00', duration: 60, capacity: 12, room: 'A' });
   const [accountForm, setAccountForm] = useState({ name: '', email: '', phone: '', password: '', role: 'trainer' });
+  const analyticsWidgets = [
+    { id: 'users', label: 'Учётные записи', value: db.users.length, note: `Тренерских: ${db.users.filter((u) => u.role === 'trainer').length}` },
+    { id: 'trainers', label: 'Тренеры', value: db.trainers.length, note: `Связанных аккаунтов: ${db.trainers.filter((t) => db.users.some((u) => u.role === 'trainer' && Number(u.trainerId) === Number(t.id))).length}` },
+    { id: 'clients', label: 'Клиенты', value: db.clients.length, note: `Активные: ${db.clients.filter((c) => c.status === 'Активен').length}` },
+    { id: 'classes', label: 'Занятия', value: db.classes.length, note: `Проведено: ${db.classes.filter((c) => c.done).length}` },
+    { id: 'payments', label: 'Платежи', value: db.payments.length, note: `Выручка: ${money(metrics.revenue)}` },
+    { id: 'archive', label: 'Архив тренировок', value: db.workoutsArchive.length, note: `Видео-карточки: ${db.workoutsArchive.filter((x) => x.mediaType === 'video').length}` },
+  ];
+  const [widgetToAdd, setWidgetToAdd] = useState('payments');
+  const [activeWidgetIds, setActiveWidgetIds] = useState(['users', 'trainers', 'clients', 'classes']);
 
   if (tab === 'Обзор') {
     return (
@@ -419,6 +602,34 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
             <Metric label="Занятий" value={metrics.classCount} />
             <Metric label="Средняя нагрузка / день" value={metrics.avgDailyClasses} />
             <Metric label="Фонд выплат" value={money(metrics.totalPayroll)} />
+          </div>
+        </Card>
+        <Card>
+          <h3>Виджеты аналитики по категориям данных</h3>
+          <div className="row" style={{ marginBottom: 12, gap: 10 }}>
+            <select value={widgetToAdd} onChange={(e) => setWidgetToAdd(e.target.value)}>
+              {analyticsWidgets.filter((w) => !activeWidgetIds.includes(w.id)).map((w) => <option key={w.id} value={w.id}>{w.label}</option>)}
+            </select>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => setActiveWidgetIds((prev) => (prev.includes(widgetToAdd) ? prev : [...prev, widgetToAdd]))}
+              disabled={analyticsWidgets.every((w) => activeWidgetIds.includes(w.id))}
+            >
+              Добавить виджет
+            </button>
+          </div>
+          <div className="metrics metrics-rich">
+            {analyticsWidgets.filter((w) => activeWidgetIds.includes(w.id)).map((w) => (
+              <div key={w.id} className="metric">
+                <div className="metric-label">{w.label}</div>
+                <div className="metric-value">{w.value}</div>
+                <small>{w.note}</small>
+                <div>
+                  <button type="button" className="btn ghost" onClick={() => setActiveWidgetIds((prev) => prev.filter((id) => id !== w.id))}>Скрыть</button>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
         <Card>
@@ -523,8 +734,8 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
           <button className="btn primary">Добавить учётку</button>
         </form>
         <DataTable
-          headers={['Сотрудник', 'Роль', 'Email', 'Телефон']}
-          rows={db.users.map((u) => [u.name, roleLabels[u.role], u.email, u.phone || '-'])}
+          headers={['Сотрудник', 'Роль', 'Связь с тренером', 'Email', 'Телефон']}
+          rows={db.users.map((u) => [u.name, roleLabels[u.role], u.role === 'trainer' ? (byId(db.trainers, u.trainerId)?.name || 'Связь не настроена') : '—', u.email, u.phone || '-'])}
         />
         <h3>Счётчики посещений клиентов</h3>
         <DataTable
@@ -561,6 +772,7 @@ function TrainerDashboard({ tab, db, setDb, user }) {
   const myClasses = db.classes.filter((c) => c.trainerId === myTrainer.id);
   const myClients = db.clients.filter((c) => c.trainerId === myTrainer.id);
   const myWork = db.workLogs.filter((w) => w.trainerId === myTrainer.id);
+  const myArchive = db.workoutsArchive.filter((item) => item.trainerId === myTrainer.id);
   const [note, setNote] = useState({ client: '', text: '' });
 
   if (tab === 'Панель') {
@@ -588,19 +800,55 @@ function TrainerDashboard({ tab, db, setDb, user }) {
 
   if (tab === 'Мои занятия') {
     return (
-      <Card>
-        <h3>Управление занятиями</h3>
-        <DataTable
-          headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
-          rows={myClasses.map((c) => [
-            c.date,
-            c.time,
-            c.title,
-            c.done ? 'Проведено' : 'Запланировано',
-            <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
-          ])}
-        />
-      </Card>
+      <>
+        <Card>
+          <h3>Управление занятиями</h3>
+          <DataTable
+            headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
+            rows={myClasses.map((c) => [
+              c.date,
+              c.time,
+              c.title,
+              c.done ? 'Проведено' : 'Запланировано',
+              <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
+            ])}
+          />
+        </Card>
+        <Card>
+          <h3>Архив тренировок</h3>
+          <div className="workout-archive-grid">
+            {myArchive.map((item) => {
+              const shouldShowVideo = item.mediaType === 'video';
+              return (
+                <article key={item.id} className="workout-archive-item">
+                  {shouldShowVideo ? (
+                    <video
+                      poster={item.poster}
+                      className="workout-archive-image"
+                      controls
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    >
+                      {getArchiveVideoSources(item).map((source) => (
+                        <source key={source} src={source} type={getMediaTypeFromUrl(source)} />
+                      ))}
+                    </video>
+                  ) : (
+                    <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
+                  )}
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p className="workout-archive-level">{item.level}</p>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </Card>
+      </>
     );
   }
 
