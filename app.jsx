@@ -2,6 +2,14 @@ const { useMemo, useState, useEffect } = React;
 
 const API_BASE = '/api';
 
+const TABATA_VIDEO_FALLBACKS = [
+  '/media/tabata.mp4',
+  'media/tabata.mp4',
+  '/media/tabata.webm',
+  'media/tabata.webm',
+  'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4',
+];
+
 const seedData = {
   users: [
     { id: 1, name: 'Анна Петрова', email: 'admin@pulsepoint.club', password: 'admin123', role: 'admin', phone: '+7 927 101-22-33' },
@@ -59,7 +67,7 @@ const seedData = {
       level: 'Высокоинтенсивная интервальная тренировка',
       description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
       mediaType: 'video',
-      media: '/media/IMG_1573.MP4',
+      media: '/media/tabata.mp4',
       poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
     },
   ],
@@ -115,19 +123,31 @@ function normalizeState(rawState) {
   }));
 
   merged.workoutsArchive = merged.workoutsArchive.map((item) => {
-    const tabataVideo = '/media/IMG_1573.MP4';
     const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
     const media = String(item.media || item.image || '').trim();
     const mediaType = item.mediaType || (isTabata || media ? 'video' : 'image');
     return {
       ...item,
       mediaType,
-      media: media || (isTabata ? tabataVideo : ''),
+      media: media || (isTabata ? TABATA_VIDEO_FALLBACKS[0] : ''),
       poster: item.poster || item.image || '',
     };
   });
 
   return merged;
+}
+
+function getMediaTypeFromUrl(url) {
+  if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+  if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+  return undefined;
+}
+
+function getArchiveVideoSources(item) {
+  const base = [item.media];
+  const isTabata = String(item.title || '').trim().toUpperCase() === 'TABATA';
+  const sources = isTabata ? [...base, ...TABATA_VIDEO_FALLBACKS] : base;
+  return [...new Set(sources.filter(Boolean).map((src) => String(src).trim()).filter(Boolean))];
 }
 
 function App() {
@@ -638,7 +658,6 @@ function TrainerDashboard({ tab, db, setDb, user }) {
                 <article key={item.id} className="workout-archive-item">
                   {shouldShowVideo ? (
                     <video
-                      src={item.media}
                       poster={item.poster}
                       className="workout-archive-image"
                       controls
@@ -646,7 +665,11 @@ function TrainerDashboard({ tab, db, setDb, user }) {
                       loop
                       playsInline
                       preload="metadata"
-                    />
+                    >
+                      {getArchiveVideoSources(item).map((source) => (
+                        <source key={source} src={source} type={getMediaTypeFromUrl(source)} />
+                      ))}
+                    </video>
                   ) : (
                     <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
                   )}

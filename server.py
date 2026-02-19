@@ -54,11 +54,46 @@ SEED_STATE = {
             "level": "Высокоинтенсивная интервальная тренировка",
             "description": "ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.",
             "mediaType": "video",
-            "media": "https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4",
+            "media": "/media/tabata.mp4",
             "poster": "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80",
         }
     ],
 }
+
+
+
+
+def detect_tabata_media_path():
+    media_dir = BASE_DIR / "media"
+    if not media_dir.exists() or not media_dir.is_dir():
+        return None
+
+    supported_ext = {".mp4", ".webm", ".mov", ".m4v", ".gif"}
+
+    candidates = []
+    for file in media_dir.iterdir():
+        if not file.is_file():
+            continue
+        suffix = file.suffix.lower()
+        if suffix not in supported_ext:
+            continue
+        name = file.name.lower()
+        score = 0
+        if "tabata" in name:
+            score += 10
+        if suffix == ".mp4":
+            score += 3
+        elif suffix == ".webm":
+            score += 2
+        elif suffix in {".mov", ".m4v"}:
+            score += 1
+        candidates.append((score, file.name))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+    return f"/media/{candidates[0][1]}"
 
 
 def db_conn():
@@ -79,9 +114,16 @@ def init_db():
 def load_state():
     with db_conn() as conn:
         row = conn.execute("SELECT state_json FROM app_state WHERE id=1").fetchone()
-        if not row:
-            return SEED_STATE
-        return json.loads(row["state_json"])
+        state = SEED_STATE if not row else json.loads(row["state_json"])
+
+    tabata_media_path = detect_tabata_media_path()
+    if tabata_media_path:
+        for item in state.get("workoutsArchive", []):
+            if str(item.get("title", "")).strip().upper() == "TABATA":
+                item["mediaType"] = "video"
+                item["media"] = tabata_media_path
+
+    return state
 
 
 def save_state(state):
