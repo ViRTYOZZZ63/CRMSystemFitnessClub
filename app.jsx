@@ -375,10 +375,21 @@ function App() {
 
   function doLogin(e) {
     e.preventDefault();
+    const normalizedEmail = String(loginForm.email || '').trim().toLowerCase();
+    const password = String(loginForm.password || '');
+    if (!isValidEmail(normalizedEmail)) {
+      setAuthMessage({ text: 'Введите корректный email для входа.', type: 'error' });
+      return;
+    }
+    if (!password) {
+      setAuthMessage({ text: 'Введите пароль.', type: 'error' });
+      return;
+    }
+
     fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
     })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({}));
@@ -412,6 +423,10 @@ function App() {
     e.preventDefault();
     if (!registerForm.name || !registerForm.email || !registerForm.password) {
       setAuthMessage({ text: 'Заполните обязательные поля.', type: 'error' });
+      return;
+    }
+    if (String(registerForm.name).trim().length < 3) {
+      setAuthMessage({ text: 'ФИО должно быть не короче 3 символов.', type: 'error' });
       return;
     }
     if (!isValidEmail(registerForm.email)) {
@@ -539,11 +554,11 @@ function App() {
               <form className="auth-form-stack" onSubmit={doLogin}>
                 <label className="field-label">
                   Email
-                  <input placeholder="name@pulsepoint.club" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
+                  <input placeholder="name@pulsepoint.club" type="email" autoComplete="username" required value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
                 </label>
                 <label className="field-label">
                   Пароль
-                  <input type="password" placeholder="Введите пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
+                  <input type="password" placeholder="Введите пароль" autoComplete="current-password" required minLength={6} value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
                 </label>
                 <button className="btn primary" type="submit">Войти в CRM</button>
                 <button type="button" className="btn ghost" onClick={doForgotPassword}>Забыл пароль</button>
@@ -552,19 +567,19 @@ function App() {
               <form className="auth-form-stack" onSubmit={doRegister}>
                 <label className="field-label">
                   ФИО
-                  <input placeholder="Иванов Иван Иванович" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
+                  <input placeholder="Иванов Иван Иванович" required minLength={3} maxLength={80} value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
                 </label>
                 <label className="field-label">
                   Email
-                  <input placeholder="name@pulsepoint.club" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
+                  <input placeholder="name@pulsepoint.club" type="email" autoComplete="email" required value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
                 </label>
                 <label className="field-label">
                   Телефон
-                  <input placeholder="+7 900 000-00-00" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} />
+                  <input placeholder="+7 900 000-00-00" autoComplete="tel" pattern="[+\d\s()-]{10,20}" value={registerForm.phone} onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })} />
                 </label>
                 <label className="field-label">
                   Пароль
-                  <input type="password" placeholder="Создайте пароль" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
+                  <input type="password" placeholder="Создайте пароль" autoComplete="new-password" required minLength={6} value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
                 </label>
                 <label className="field-label">
                   Роль сотрудника
@@ -924,10 +939,10 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
           setDb((s) => ({ ...s, users: [...s.users, { id: nextId(s.users), ...accountForm, email: accountForm.email.trim().toLowerCase(), trainerId: accountForm.role === 'trainer' ? s.trainers[0]?.id : undefined }] }));
           setAccountForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
         }}>
-          <input placeholder="ФИО" value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} />
-          <input placeholder="Email" value={accountForm.email} onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value.toLowerCase() })} />
-          <input placeholder="Телефон" value={accountForm.phone} onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })} />
-          <input placeholder="Пароль" value={accountForm.password} onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })} />
+          <input placeholder="ФИО" required minLength={3} value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} />
+          <input placeholder="Email" type="email" required value={accountForm.email} onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value.toLowerCase() })} />
+          <input placeholder="Телефон" pattern="[+\d\s()-]{10,20}" value={accountForm.phone} onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })} />
+          <input placeholder="Пароль" type="password" required minLength={6} value={accountForm.password} onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })} />
           <select value={accountForm.role} onChange={(e) => setAccountForm({ ...accountForm, role: e.target.value })}><option value="trainer">Тренер</option><option value="hr">HR</option><option value="accountant">Бухгалтер</option><option value="admin">Админ</option></select>
           <button className="btn primary">Добавить учётку</button>
         </form>

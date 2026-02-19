@@ -46,12 +46,16 @@ body {
 .site-header {
   position: sticky;
   top: 8px;
-  z-index: 5;
+  z-index: 12;
   padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  background: linear-gradient(180deg, rgba(6, 12, 24, 0.98), rgba(8, 15, 30, 0.97));
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  backdrop-filter: none;
+  box-shadow: 0 16px 32px rgba(2, 6, 23, 0.52);
 }
 .site-header h1 { margin: 0; font-size: clamp(1.2rem, 2.7vw, 1.8rem); }
 .eyebrow { margin: 0 0 4px; font-size: .88rem; color: #67e8f9; font-weight: 700; }
@@ -467,4 +471,14 @@ tbody tr:hover { background: rgba(148,163,184,.08); }
   .site-header h1 { font-size: 1.2rem; }
   .card { padding: 12px; }
   .table-wrap { border-radius: 10px; }
+}
+
+
+.field-label input:invalid, .field-label select:invalid {
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.field-label input:focus, .field-label select:focus {
+  outline: 2px solid rgba(34, 211, 238, 0.35);
+  outline-offset: 1px;
 }
