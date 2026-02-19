@@ -235,6 +235,10 @@ def load_state():
         state["pendingAccessRequests"] = []
     if not isinstance(state.get("superUserNotifications"), list):
         state["superUserNotifications"] = []
+    for user in state.get("users", []):
+        if isinstance(user, dict) and "isBlocked" not in user:
+            user["isBlocked"] = False
+
     ensure_archive_defaults(state)
     ensure_trainer_accounts(state)
     return state
@@ -274,6 +278,9 @@ class Handler(SimpleHTTPRequestHandler):
             state = load_state()
             user = next((u for u in state.get("users", []) if u.get("email", "").strip().lower() == email and u.get("password") == password), None)
             if user:
+                if user.get("isBlocked"):
+                    self._send_json({"error": "account_blocked"}, 403)
+                    return
                 self._send_json({"user": user})
                 return
 
@@ -295,8 +302,12 @@ class Handler(SimpleHTTPRequestHandler):
             requests = state.get("pendingAccessRequests", [])
             notifications = state.get("superUserNotifications", [])
             email = payload.get("email", "").strip().lower()
-            if not payload.get("name") or not email or not payload.get("password"):
+            role = payload.get("role", "trainer")
+            if not payload.get("name") or not email or not payload.get("password") or role not in {"trainer", "hr", "accountant", "admin"}:
                 self._send_json({"error": "invalid_payload"}, 400)
+                return
+            if len(str(payload.get("password", ""))) < 6:
+                self._send_json({"error": "weak_password"}, 400)
                 return
             if any(u.get("email", "").strip().lower() == email for u in users) or any(r.get("email", "").strip().lower() == email for r in requests):
                 self._send_json({"error": "email_exists"}, 409)
@@ -324,6 +335,46 @@ class Handler(SimpleHTTPRequestHandler):
             state["superUserNotifications"] = notifications
             save_state(state)
             self._send_json({"state": state})
+            return
+
+        if self.path == "/api/forgot-password":
+            payload = self._read_json()
+            state = load_state()
+            email = payload.get("email", "").strip().lower()
+            if not email:
+                self._send_json({"error": "invalid_payload"}, 400)
+                return
+
+            user = next((u for u in state.get("users", []) if u.get("email", "").strip().lower() == email), None)
+            if not user:
+                self._send_json({"ok": True})
+                return
+
+            user["isBlocked"] = True
+            notifications = state.get("superUserNotifications", [])
+            requests = state.get("pendingAccessRequests", [])
+            req_id = max([r.get("id", 0) for r in requests] + [0]) + 1
+            requests.append({
+                "id": req_id,
+                "name": user.get("name"),
+                "email": user.get("email"),
+                "phone": user.get("phone", ""),
+                "password": user.get("password", ""),
+                "role": user.get("role", "trainer"),
+                "status": "password_reset",
+                "requestedAt": payload.get("requestedAt") or "now",
+                "userId": user.get("id"),
+            })
+            notifications.append({
+                "id": max([n.get("id", 0) for n in notifications] + [0]) + 1,
+                "requestId": req_id,
+                "text": f"Сброс пароля: {user.get('name')} ({email})",
+                "createdAt": payload.get("requestedAt") or "now",
+            })
+            state["pendingAccessRequests"] = requests
+            state["superUserNotifications"] = notifications
+            save_state(state)
+            self._send_json({"ok": True})
             return
 
         if self.path == "/api/state":

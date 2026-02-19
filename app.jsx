@@ -190,6 +190,10 @@ const calcHoursValue = (start, end) => {
 };
 const calcHours = (start, end) => `${calcHoursValue(start, end).toFixed(1)} ч`;
 
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+const isValidPhone = (value) => !value || /^[+\d\s()-]{10,20}$/.test(String(value || '').trim());
+const isStrongPassword = (value) => String(value || '').trim().length >= 6;
+
 
 function normalizeState(rawState) {
   const base = rawState && typeof rawState === 'object' ? rawState : {};
@@ -396,6 +400,10 @@ function App() {
           setAuthMessage({ text: 'Заявка на доступ ещё на согласовании у супер пользователя.', type: 'error' });
           return;
         }
+        if (error?.error === 'account_blocked') {
+          setAuthMessage({ text: 'Учётная запись заблокирована. Обратитесь к супер пользователю для смены пароля.', type: 'error' });
+          return;
+        }
         setAuthMessage({ text: 'Неверный email или пароль.', type: 'error' });
       });
   }
@@ -404,6 +412,18 @@ function App() {
     e.preventDefault();
     if (!registerForm.name || !registerForm.email || !registerForm.password) {
       setAuthMessage({ text: 'Заполните обязательные поля.', type: 'error' });
+      return;
+    }
+    if (!isValidEmail(registerForm.email)) {
+      setAuthMessage({ text: 'Введите корректный email.', type: 'error' });
+      return;
+    }
+    if (!isValidPhone(registerForm.phone)) {
+      setAuthMessage({ text: 'Введите корректный телефон.', type: 'error' });
+      return;
+    }
+    if (!isStrongPassword(registerForm.password)) {
+      setAuthMessage({ text: 'Пароль должен быть не короче 6 символов.', type: 'error' });
       return;
     }
     const normalizedEmail = registerForm.email.trim().toLowerCase();
@@ -438,6 +458,30 @@ function App() {
       })
       .catch(() => {
         setAuthMessage({ text: 'Не удалось отправить заявку на доступ.', type: 'error' });
+      });
+  }
+
+  function doForgotPassword() {
+    const email = String(loginForm.email || '').trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      setAuthMessage({ text: 'Укажите корректный email для восстановления.', type: 'error' });
+      return;
+    }
+    fetch(`${API_BASE}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw payload;
+        return payload;
+      })
+      .then(() => {
+        setAuthMessage({ text: 'Если учётная запись найдена, она заблокирована и отправлена супер пользователю на смену пароля.', type: 'success' });
+      })
+      .catch(() => {
+        setAuthMessage({ text: 'Не удалось отправить запрос на восстановление.', type: 'error' });
       });
   }
 
@@ -478,6 +522,7 @@ function App() {
               <li>trainer@pulsepoint.club / trainer123</li>
               <li>hr@pulsepoint.club / hr123</li>
               <li>finance@pulsepoint.club / finance123</li>
+              <li>super@pulsepoint.club / super123</li>
             </ul>
           </div>
 
@@ -501,6 +546,7 @@ function App() {
                   <input type="password" placeholder="Введите пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
                 </label>
                 <button className="btn primary" type="submit">Войти в CRM</button>
+                <button type="button" className="btn ghost" onClick={doForgotPassword}>Забыл пароль</button>
               </form>
             ) : (
               <form className="auth-form-stack" onSubmit={doRegister}>
@@ -595,9 +641,22 @@ function RoleDashboard({ user, tab, db, setDb, metrics }) {
 
 function SuperUserDashboard({ tab, db, setDb }) {
   const pending = db.pendingAccessRequests.filter((r) => r.status === 'pending');
+  const resetRequests = db.pendingAccessRequests.filter((r) => r.status === 'password_reset');
+  const [passwordDrafts, setPasswordDrafts] = useState({});
 
   function approveRequest(request) {
     setDb((state) => {
+      if (request.status === 'password_reset') {
+        const newPassword = String(passwordDrafts[request.id] || '').trim();
+        if (!isStrongPassword(newPassword)) return state;
+        return {
+          ...state,
+          users: state.users.map((u) => Number(u.id) === Number(request.userId) ? { ...u, password: newPassword, isBlocked: false } : u),
+          pendingAccessRequests: state.pendingAccessRequests.map((r) => r.id === request.id ? { ...r, status: 'approved', reviewedAt: new Date().toISOString() } : r),
+          superUserNotifications: state.superUserNotifications.filter((n) => n.requestId !== request.id),
+        };
+      }
+
       if (state.users.some((u) => u.email.trim().toLowerCase() === request.email.trim().toLowerCase())) {
         return {
           ...state,
@@ -613,6 +672,7 @@ function SuperUserDashboard({ tab, db, setDb }) {
         phone: request.phone || '',
         password: request.password,
         role: request.role,
+        isBlocked: false,
         trainerId: request.role === 'trainer' ? (freeTrainer?.id || state.trainers[0]?.id) : undefined,
       };
       return {
@@ -644,31 +704,50 @@ function SuperUserDashboard({ tab, db, setDb }) {
     }));
   }
 
+  function toggleBlock(userId) {
+    setDb((state) => ({
+      ...state,
+      users: state.users.map((u) => u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u),
+    }));
+  }
+
+  function savePassword(userId) {
+    const newPassword = String(passwordDrafts[userId] || '').trim();
+    if (!isStrongPassword(newPassword)) return;
+    setDb((state) => ({
+      ...state,
+      users: state.users.map((u) => u.id === userId ? { ...u, password: newPassword, isBlocked: false } : u),
+    }));
+    setPasswordDrafts((prev) => ({ ...prev, [userId]: '' }));
+  }
+
   if (tab !== 'Доступы и роли') return null;
 
   return (
     <>
       <Card>
         <h3>Уведомления супер пользователя</h3>
-        <p className="muted-row">Новых заявок: {pending.length}. После регистрации сотрудника сюда приходит запрос на доступ в CRM.</p>
+        <p className="muted-row">Новых заявок: {pending.length}. Запросы на сброс пароля: {resetRequests.length}.</p>
         <DataTable
           headers={['Сотрудник', 'Email', 'Роль', 'Статус', 'Действия']}
           rows={db.pendingAccessRequests.map((r) => [
             r.name,
             r.email,
             roleLabels[r.role] || r.role,
-            r.status === 'pending' ? 'Ожидает решения' : r.status === 'approved' ? 'Одобрен' : 'Отказано',
+            r.status === 'pending' ? 'Ожидает решения' : r.status === 'approved' ? 'Одобрен' : r.status === 'password_reset' ? 'Сброс пароля' : 'Отказано',
             r.status === 'pending'
               ? <div className="row"><button type="button" className="btn primary" onClick={() => approveRequest(r)}>Разрешить</button><button type="button" className="btn ghost" onClick={() => rejectRequest(r)}>Отказать</button></div>
-              : '—',
+              : r.status === 'password_reset'
+                ? <div className="form-grid"><input placeholder="Новый пароль" value={passwordDrafts[r.id] || ''} onChange={(e) => setPasswordDrafts((prev) => ({ ...prev, [r.id]: e.target.value }))} /><button type="button" className="btn primary" onClick={() => approveRequest(r)}>Сменить и активировать</button></div>
+                : '—',
           ])}
         />
       </Card>
 
       <Card>
-        <h3>Роли и доступы пользователей</h3>
+        <h3>Учётные данные и роли</h3>
         <DataTable
-          headers={['Пользователь', 'Email', 'Текущая роль', 'Назначить роль', 'Привязка тренера']}
+          headers={['Пользователь', 'Email', 'Текущая роль', 'Назначить роль', 'Пароль', 'Статус', 'Управление']}
           rows={db.users.map((u) => [
             u.name,
             u.email,
@@ -680,13 +759,16 @@ function SuperUserDashboard({ tab, db, setDb }) {
               <option value="admin">Админ</option>
               <option value="superuser">Супер пользователь</option>
             </select>,
-            u.role === 'trainer' ? (byId(db.trainers, u.trainerId)?.name || 'Не назначен') : '—',
+            <div className="form-grid"><input placeholder="Новый пароль" value={passwordDrafts[u.id] || ''} onChange={(e) => setPasswordDrafts((prev) => ({ ...prev, [u.id]: e.target.value }))} /><button type="button" className="btn ghost" onClick={() => savePassword(u.id)}>Сохранить</button></div>,
+            u.isBlocked ? 'Заблокирован' : 'Активен',
+            <button type="button" className="btn ghost" onClick={() => toggleBlock(u.id)}>{u.isBlocked ? 'Активировать' : 'Блокировать'}</button>,
           ])}
         />
       </Card>
     </>
   );
 }
+
 
 function AdminDashboard({ tab, db, setDb, metrics }) {
   const [trainerForm, setTrainerForm] = useState({ name: '', spec: '', level: 'Middle', maxDailySlots: 4, rate: 2000 });
@@ -776,7 +858,7 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
         <h3>Пул тренеров</h3>
         <form className="form-grid" onSubmit={(e) => {
           e.preventDefault();
-          if (!trainerForm.name || !trainerForm.spec) return;
+          if (!trainerForm.name || !trainerForm.spec || Number(trainerForm.maxDailySlots) <= 0 || Number(trainerForm.rate) <= 0) return;
           setDb((s) => ({ ...s, trainers: [...s.trainers, { id: nextId(s.trainers), ...trainerForm }] }));
           setTrainerForm({ name: '', spec: '', level: 'Middle', maxDailySlots: 4, rate: 2000 });
         }}>
@@ -801,7 +883,7 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
         <h3>Расписание занятий</h3>
         <form className="form-grid" onSubmit={(e) => {
           e.preventDefault();
-          if (!classForm.title) return;
+          if (!classForm.title || !classForm.date || !classForm.time || Number(classForm.duration) <= 0 || Number(classForm.capacity) <= 0) return;
           setDb((s) => ({ ...s, classes: [...s.classes, { id: nextId(s.classes), ...classForm, done: false }] }));
         }}>
           <input placeholder="Название" value={classForm.title} onChange={(e) => setClassForm({ ...classForm, title: e.target.value })} />
@@ -837,7 +919,7 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
         <h3>Управление учётными записями</h3>
         <form className="form-grid" onSubmit={(e) => {
           e.preventDefault();
-          if (!accountForm.name || !accountForm.email || !accountForm.password) return;
+          if (!accountForm.name || !isValidEmail(accountForm.email) || !isStrongPassword(accountForm.password) || !isValidPhone(accountForm.phone)) return;
           if (db.users.some((u) => u.email.trim().toLowerCase() === accountForm.email.trim().toLowerCase())) return;
           setDb((s) => ({ ...s, users: [...s.users, { id: nextId(s.users), ...accountForm, email: accountForm.email.trim().toLowerCase(), trainerId: accountForm.role === 'trainer' ? s.trainers[0]?.id : undefined }] }));
           setAccountForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
