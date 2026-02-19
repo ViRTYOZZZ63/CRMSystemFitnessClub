@@ -2,6 +2,15 @@ const { useMemo, useState, useEffect } = React;
 
 const API_BASE = '/api';
 
+const ARCHIVE_MEDIA_FALLBACKS = {
+  TABATA: ['/media/tabata.mp4', 'media/tabata.mp4', '/media/tabata.webm', 'media/tabata.webm', 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4'],
+  'MUSCLE TONING (MT)': ['/media/muscle-toning-mt.mp4', '/media/muscle-toning-mt.webm'],
+  'TRX MIX': ['/media/trx-mix.mp4', '/media/trx-mix.webm'],
+  'FIT FOR JUNIORS': ['/media/fit-for-juniors.mp4', '/media/fit-for-juniors.webm'],
+  PILATES: ['/media/pilates.mp4', '/media/pilates.webm'],
+  STRETCHING: ['/media/stretching.mp4', '/media/stretching.webm'],
+};
+
 const seedData = {
   users: [
     { id: 1, name: 'Анна Петрова', email: 'admin@pulsepoint.club', password: 'admin123', role: 'admin', phone: '+7 927 101-22-33' },
@@ -51,6 +60,68 @@ const seedData = {
     { id: 5, client: 'Алена Журавлева', amount: 7900, method: 'Онлайн', date: '2026-02-17' },
   ],
   notes: [],
+  workoutsArchive: [
+    {
+      id: 1,
+      trainerId: 1,
+      title: 'TABATA',
+      level: 'Высокоинтенсивная интервальная тренировка',
+      description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
+      mediaType: 'video',
+      media: '/media/tabata.mp4',
+      poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 2,
+      trainerId: 1,
+      title: 'MUSCLE TONING (MT)',
+      level: 'Классическая силовая тренировка',
+      description: 'ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ пОДГотовКИ.',
+      mediaType: 'video',
+      media: '/media/muscle-toning-mt.mp4',
+      poster: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 3,
+      trainerId: 1,
+      title: 'TRX MIX',
+      level: 'Функциональный тренинг',
+      description: 'ЭТО функциональная тренировка с использованием подвесных петель. Подходит для всех уровней подготовленности.МЫ ДОБАВИЛИ ИНТЕНСИВНОСТИ ПРИВЫЧНЫМ ДВИЖЕНИЯМ И СДЕЛАЛИ УРОК МАКСИМАЛЬНО ЭФФЕКТИВНЫМ.',
+      mediaType: 'video',
+      media: '/media/trx-mix.mp4',
+      poster: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 4,
+      trainerId: 1,
+      title: 'FIT FOR JUNIORS',
+      level: '12-16 лет',
+      description: 'ЭТО ЗАНЯТИЕ В ТРЕНАЖЁРНОМ ЗАЛЕ ПОД КОНТРОЛЕМ ОПЫТНОГО ПЕРСОНАЛЬНОГО ТРЕНЕРА. ЗДЕСЬ ОЧЕНЬ ИНТЕРЕСНО, ВЕДЬ ВАШЕМУ РЕБЁНКУ ВСЕГДА ХОЧЕТСЯ ПОХОДИТЬ ПО БЕГОВОЙ ДОРОЖКЕ, ПОДНЯТЬ ШТАНГУ, ПОДЕРЖАТЬ В РУКАХ ГАНТЕЛИ. ЗДЕСЬ ЭТО МОЖНО СДЕЛАТЬ С ПОЛЬЗОЙ ДЛЯ ДЕЛА, А НЕ ПРОСТО ТАК, ПОТОМУ ЧТО «ХОЧУ». ЗДЕСЬ БУДЕТ РЕЗУЛЬТАТ',
+      mediaType: 'video',
+      media: '/media/fit-for-juniors.mp4',
+      poster: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 5,
+      trainerId: 1,
+      title: 'PILATES',
+      level: 'Здоровая спина и суставы',
+      description: 'ЭТО НАПРАВЛЕНИЕ ОЧЕНЬ ПОЛЕЗНО ДЛЯ МЫШЦ СПИНЫ И ДЛЯ «УКРЕПЛЕНИЯ» ПОЗВОНОЧНИКА. СЛУЖИТ ОТЛИЧНОЙ ПРОФИЛАКТИКОЙ ЗАБОЛЕВАНИЙ ПОЗВОНОЧНИКА И суставов',
+      mediaType: 'video',
+      media: '/media/pilates.mp4',
+      poster: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      id: 6,
+      trainerId: 1,
+      title: 'STRETCHING',
+      level: 'Гибкость и восстановление',
+      description: 'ЭТО СПОКОЙНОЕ, МЕДЛЕННОЕ, НО ОЧЕНЬ ПОЛЕЗНОЕ ДЛЯ ВАШИХ МЫШЦ НАПРАВЛЕНИЕ УЛУЧШИТ ГИБКОСТЬ, ПОДВИЖНОСТЬ, ЭЛАСТИЧНОСТЬ МЫШЦ, СВЯЗОК, СУСТАВОВ. ОБЕСПЕЧИТ СНАБЖЕНИЕ КРОВЬЮ И КИСЛОРОДОМ РАБОТАЮЩИЕ МЫШЦЫ, ТЕМ САМЫМ ОКАЖЕТ ОЧЕНЬ ПОЛЕЗНОЕ ВЛИЯНИЕ НА НИХ. УСКОРИТ ВОССТАНОВЛЕНИЕ ПОСЛЕ СИЛОВЫХ ТРЕНИРОВОК.',
+      mediaType: 'video',
+      media: '/media/stretching.mp4',
+      poster: 'https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1200&q=80',
+    },
+  ],
 };
 
 const roleLabels = {
@@ -92,6 +163,7 @@ function normalizeState(rawState) {
     candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
     payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
     notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+    workoutsArchive: Array.isArray(base.workoutsArchive) ? base.workoutsArchive : seedData.workoutsArchive,
   };
 
   merged.clients = merged.clients.map((client, index) => ({
@@ -101,7 +173,41 @@ function normalizeState(rawState) {
     lastVisit: client.lastVisit || '2026-02-16',
   }));
 
+  const archiveByTitle = new Map((Array.isArray(merged.workoutsArchive) ? merged.workoutsArchive : []).map((item) => [String(item.title || '').trim().toUpperCase(), item]));
+  seedData.workoutsArchive.forEach((item) => {
+    const key = String(item.title || '').trim().toUpperCase();
+    if (!archiveByTitle.has(key)) archiveByTitle.set(key, item);
+  });
+
+  merged.workoutsArchive = [...archiveByTitle.values()].map((item) => {
+    const media = String(item.media || item.image || '').trim();
+    const fallbackSources = getArchiveFallbackSources(item.title);
+    const mediaType = item.mediaType || (fallbackSources.length || media ? 'video' : 'image');
+    return {
+      ...item,
+      mediaType,
+      media: media || fallbackSources[0] || '',
+      poster: item.poster || item.image || '',
+    };
+  });
+
   return merged;
+}
+
+function getMediaTypeFromUrl(url) {
+  if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+  if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+  return undefined;
+}
+
+function getArchiveFallbackSources(title) {
+  return ARCHIVE_MEDIA_FALLBACKS[String(title || '').trim().toUpperCase()] || [];
+}
+
+function getArchiveVideoSources(item) {
+  const base = [item.media];
+  const sources = [...base, ...getArchiveFallbackSources(item.title)];
+  return [...new Set(sources.filter(Boolean).map((src) => String(src).trim()).filter(Boolean))];
 }
 
 function App() {
@@ -561,6 +667,7 @@ function TrainerDashboard({ tab, db, setDb, user }) {
   const myClasses = db.classes.filter((c) => c.trainerId === myTrainer.id);
   const myClients = db.clients.filter((c) => c.trainerId === myTrainer.id);
   const myWork = db.workLogs.filter((w) => w.trainerId === myTrainer.id);
+  const myArchive = db.workoutsArchive.filter((item) => item.trainerId === myTrainer.id);
   const [note, setNote] = useState({ client: '', text: '' });
 
   if (tab === 'Панель') {
@@ -588,19 +695,55 @@ function TrainerDashboard({ tab, db, setDb, user }) {
 
   if (tab === 'Мои занятия') {
     return (
-      <Card>
-        <h3>Управление занятиями</h3>
-        <DataTable
-          headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
-          rows={myClasses.map((c) => [
-            c.date,
-            c.time,
-            c.title,
-            c.done ? 'Проведено' : 'Запланировано',
-            <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
-          ])}
-        />
-      </Card>
+      <>
+        <Card>
+          <h3>Управление занятиями</h3>
+          <DataTable
+            headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
+            rows={myClasses.map((c) => [
+              c.date,
+              c.time,
+              c.title,
+              c.done ? 'Проведено' : 'Запланировано',
+              <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
+            ])}
+          />
+        </Card>
+        <Card>
+          <h3>Архив тренировок</h3>
+          <div className="workout-archive-grid">
+            {myArchive.map((item) => {
+              const shouldShowVideo = item.mediaType === 'video';
+              return (
+                <article key={item.id} className="workout-archive-item">
+                  {shouldShowVideo ? (
+                    <video
+                      poster={item.poster}
+                      className="workout-archive-image"
+                      controls
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    >
+                      {getArchiveVideoSources(item).map((source) => (
+                        <source key={source} src={source} type={getMediaTypeFromUrl(source)} />
+                      ))}
+                    </video>
+                  ) : (
+                    <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
+                  )}
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p className="workout-archive-level">{item.level}</p>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </Card>
+      </>
     );
   }
 
