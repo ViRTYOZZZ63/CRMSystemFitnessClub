@@ -21,6 +21,7 @@ const seedData = {
     { id: 6, name: 'Артем Беляев', email: 'artem.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 3, phone: '+7 927 106-22-33' },
     { id: 7, name: 'Егор Титов', email: 'egor.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 4, phone: '+7 927 107-33-44' },
     { id: 8, name: 'Ксения Левина', email: 'ksenia.trainer@pulsepoint.club', password: 'trainer123', role: 'trainer', trainerId: 5, phone: '+7 927 108-44-55' },
+    { id: 9, name: 'Супер Пользователь', email: 'super@pulsepoint.club', password: 'super123', role: 'superuser', phone: '+7 927 109-55-66' },
   ],
   trainers: [
     { id: 1, name: 'Алексей Волков', spec: 'Силовой тренинг', level: 'Senior', maxDailySlots: 4, rate: 2200 },
@@ -96,6 +97,8 @@ const seedData = {
     { id: 15, client: 'Савелий Виноградов', amount: 7200, method: 'Карта', date: '2026-02-20' },
   ],
   notes: [],
+  pendingAccessRequests: [],
+  superUserNotifications: [],
   workoutsArchive: [
     {
       id: 1,
@@ -165,6 +168,7 @@ const roleLabels = {
   trainer: 'Тренер',
   hr: 'HR',
   accountant: 'Бухгалтер',
+  superuser: 'Супер пользователь',
 };
 
 const roleTabs = {
@@ -172,6 +176,7 @@ const roleTabs = {
   trainer: ['Панель', 'Мои занятия', 'Клиенты', 'Рабочее время'],
   hr: ['Команда', 'Найм', 'Сертификации', 'Посещаемость'],
   accountant: ['Финансы', 'Платежи', 'Выплаты', 'Прогноз'],
+  superuser: ['Доступы и роли'],
 };
 
 const money = (v) => `${Number(v).toLocaleString('ru-RU')} ₽`;
@@ -199,6 +204,8 @@ function normalizeState(rawState) {
     candidates: Array.isArray(base.candidates) && base.candidates.length ? base.candidates : seedData.candidates,
     payments: Array.isArray(base.payments) && base.payments.length ? base.payments : seedData.payments,
     notes: Array.isArray(base.notes) ? base.notes : seedData.notes,
+    pendingAccessRequests: Array.isArray(base.pendingAccessRequests) ? base.pendingAccessRequests : seedData.pendingAccessRequests,
+    superUserNotifications: Array.isArray(base.superUserNotifications) ? base.superUserNotifications : seedData.superUserNotifications,
     workoutsArchive: Array.isArray(base.workoutsArchive) ? base.workoutsArchive : seedData.workoutsArchive,
   };
 
@@ -216,6 +223,7 @@ function normalizeState(rawState) {
   merged.clients = mergeById(merged.clients, seedData.clients);
   merged.workLogs = mergeById(merged.workLogs, seedData.workLogs);
   merged.payments = mergeById(merged.payments, seedData.payments);
+  merged.pendingAccessRequests = mergeById(merged.pendingAccessRequests, seedData.pendingAccessRequests);
 
   merged.users = Array.isArray(merged.users) ? [...merged.users] : [];
   merged.trainers.forEach((trainer) => {
@@ -369,8 +377,9 @@ function App() {
       body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
     })
       .then(async (response) => {
-        if (!response.ok) throw new Error('login_failed');
-        return response.json();
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw payload;
+        return payload;
       })
       .then((payload) => {
         const found = payload.user;
@@ -378,7 +387,15 @@ function App() {
         setTab(roleTabs[found.role][0]);
         setAuthMessage({ text: `Добро пожаловать, ${found.name}!`, type: 'success' });
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error?.error === 'access_denied') {
+          setAuthMessage({ text: 'Администрация клуба не предоставила доступ к системе, обратитесь к кадровику.', type: 'error' });
+          return;
+        }
+        if (error?.error === 'access_pending') {
+          setAuthMessage({ text: 'Заявка на доступ ещё на согласовании у супер пользователя.', type: 'error' });
+          return;
+        }
         setAuthMessage({ text: 'Неверный email или пароль.', type: 'error' });
       });
   }
@@ -390,9 +407,10 @@ function App() {
       return;
     }
     const normalizedEmail = registerForm.email.trim().toLowerCase();
-    const exists = db.users.some((u) => u.email.trim().toLowerCase() === normalizedEmail);
+    const exists = db.users.some((u) => u.email.trim().toLowerCase() === normalizedEmail)
+      || db.pendingAccessRequests.some((r) => r.email.trim().toLowerCase() === normalizedEmail);
     if (exists) {
-      setAuthMessage({ text: 'Пользователь с таким email уже существует.', type: 'error' });
+      setAuthMessage({ text: 'Пользователь или заявка с таким email уже существует.', type: 'error' });
       return;
     }
 
@@ -408,17 +426,18 @@ function App() {
       }),
     })
       .then(async (response) => {
-        if (!response.ok) throw new Error('register_failed');
-        return response.json();
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw payload;
+        return payload;
       })
       .then((payload) => {
         setDb(normalizeState(payload.state));
         setRegisterForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
         setAuthMode('login');
-        setAuthMessage({ text: 'Учётная запись создана. Теперь войдите.', type: 'success' });
+        setAuthMessage({ text: 'Заявка отправлена. Доступ откроется после одобрения супер пользователем.', type: 'success' });
       })
       .catch(() => {
-        setAuthMessage({ text: 'Не удалось создать учётную запись.', type: 'error' });
+        setAuthMessage({ text: 'Не удалось отправить заявку на доступ.', type: 'error' });
       });
   }
 
@@ -569,7 +588,104 @@ function RoleDashboard({ user, tab, db, setDb, metrics }) {
   if (user.role === 'admin') return <AdminDashboard tab={tab} db={db} setDb={setDb} metrics={metrics} />;
   if (user.role === 'trainer') return <TrainerDashboard tab={tab} db={db} setDb={setDb} user={user} />;
   if (user.role === 'hr') return <HRDashboard tab={tab} db={db} setDb={setDb} />;
+  if (user.role === 'superuser') return <SuperUserDashboard tab={tab} db={db} setDb={setDb} />;
   return <AccountantDashboard tab={tab} db={db} setDb={setDb} metrics={metrics} />;
+}
+
+
+function SuperUserDashboard({ tab, db, setDb }) {
+  const pending = db.pendingAccessRequests.filter((r) => r.status === 'pending');
+
+  function approveRequest(request) {
+    setDb((state) => {
+      if (state.users.some((u) => u.email.trim().toLowerCase() === request.email.trim().toLowerCase())) {
+        return {
+          ...state,
+          pendingAccessRequests: state.pendingAccessRequests.map((r) => r.id === request.id ? { ...r, status: 'approved', reviewedAt: new Date().toISOString() } : r),
+          superUserNotifications: state.superUserNotifications.filter((n) => n.requestId !== request.id),
+        };
+      }
+      const freeTrainer = state.trainers.find((t) => !state.users.some((u) => u.role === 'trainer' && Number(u.trainerId) === Number(t.id)));
+      const user = {
+        id: nextId(state.users),
+        name: request.name,
+        email: request.email,
+        phone: request.phone || '',
+        password: request.password,
+        role: request.role,
+        trainerId: request.role === 'trainer' ? (freeTrainer?.id || state.trainers[0]?.id) : undefined,
+      };
+      return {
+        ...state,
+        users: [...state.users, user],
+        pendingAccessRequests: state.pendingAccessRequests.map((r) => r.id === request.id ? { ...r, status: 'approved', reviewedAt: new Date().toISOString() } : r),
+        superUserNotifications: state.superUserNotifications.filter((n) => n.requestId !== request.id),
+      };
+    });
+  }
+
+  function rejectRequest(request) {
+    setDb((state) => ({
+      ...state,
+      pendingAccessRequests: state.pendingAccessRequests.map((r) => r.id === request.id ? { ...r, status: 'rejected', reviewedAt: new Date().toISOString() } : r),
+      superUserNotifications: state.superUserNotifications.filter((n) => n.requestId !== request.id),
+    }));
+  }
+
+  function updateRole(userId, role) {
+    setDb((state) => ({
+      ...state,
+      users: state.users.map((u) => {
+        if (u.id !== userId) return u;
+        if (role !== 'trainer') return { ...u, role, trainerId: undefined };
+        const freeTrainer = state.trainers.find((t) => !state.users.some((x) => x.id !== u.id && x.role === 'trainer' && Number(x.trainerId) === Number(t.id)));
+        return { ...u, role, trainerId: u.trainerId || freeTrainer?.id || state.trainers[0]?.id };
+      }),
+    }));
+  }
+
+  if (tab !== 'Доступы и роли') return null;
+
+  return (
+    <>
+      <Card>
+        <h3>Уведомления супер пользователя</h3>
+        <p className="muted-row">Новых заявок: {pending.length}. После регистрации сотрудника сюда приходит запрос на доступ в CRM.</p>
+        <DataTable
+          headers={['Сотрудник', 'Email', 'Роль', 'Статус', 'Действия']}
+          rows={db.pendingAccessRequests.map((r) => [
+            r.name,
+            r.email,
+            roleLabels[r.role] || r.role,
+            r.status === 'pending' ? 'Ожидает решения' : r.status === 'approved' ? 'Одобрен' : 'Отказано',
+            r.status === 'pending'
+              ? <div className="row"><button type="button" className="btn primary" onClick={() => approveRequest(r)}>Разрешить</button><button type="button" className="btn ghost" onClick={() => rejectRequest(r)}>Отказать</button></div>
+              : '—',
+          ])}
+        />
+      </Card>
+
+      <Card>
+        <h3>Роли и доступы пользователей</h3>
+        <DataTable
+          headers={['Пользователь', 'Email', 'Текущая роль', 'Назначить роль', 'Привязка тренера']}
+          rows={db.users.map((u) => [
+            u.name,
+            u.email,
+            roleLabels[u.role] || u.role,
+            <select value={u.role} onChange={(e) => updateRole(u.id, e.target.value)}>
+              <option value="trainer">Тренер</option>
+              <option value="hr">HR</option>
+              <option value="accountant">Бухгалтер</option>
+              <option value="admin">Админ</option>
+              <option value="superuser">Супер пользователь</option>
+            </select>,
+            u.role === 'trainer' ? (byId(db.trainers, u.trainerId)?.name || 'Не назначен') : '—',
+          ])}
+        />
+      </Card>
+    </>
+  );
 }
 
 function AdminDashboard({ tab, db, setDb, metrics }) {

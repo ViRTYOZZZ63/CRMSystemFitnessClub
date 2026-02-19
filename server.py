@@ -14,6 +14,7 @@ SEED_STATE = {
         {"id": 2, "name": "Алексей Волков", "email": "trainer@pulsepoint.club", "password": "trainer123", "role": "trainer", "trainerId": 1, "phone": "+7 927 102-33-44"},
         {"id": 3, "name": "Мария Исаева", "email": "hr@pulsepoint.club", "password": "hr123", "role": "hr", "phone": "+7 927 103-44-55"},
         {"id": 4, "name": "Ольга Соколова", "email": "finance@pulsepoint.club", "password": "finance123", "role": "accountant", "phone": "+7 927 104-55-66"},
+        {"id": 9, "name": "Супер Пользователь", "email": "super@pulsepoint.club", "password": "super123", "role": "superuser", "phone": "+7 927 109-55-66"},
     ],
     "trainers": [
         {"id": 1, "name": "Алексей Волков", "spec": "Силовой тренинг", "level": "Senior", "maxDailySlots": 4, "rate": 2200},
@@ -46,6 +47,8 @@ SEED_STATE = {
         {"id": 3, "client": "Виктор Осипов", "amount": 18900, "method": "Онлайн", "date": "2026-02-16"},
     ],
     "notes": [],
+    "pendingAccessRequests": [],
+    "superUserNotifications": [],
     "workoutsArchive": [
         {
             "id": 1,
@@ -62,7 +65,7 @@ SEED_STATE = {
             "trainerId": 1,
             "title": "MUSCLE TONING (MT)",
             "level": "Классическая силовая тренировка",
-            "description": "ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ ПОДГОТОВКИ.",
+            "description": "ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ пОДГотовКИ.",
             "mediaType": "video",
             "media": "/media/muscle-toning-mt.mp4",
             "poster": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
@@ -228,6 +231,10 @@ def load_state():
         row = conn.execute("SELECT state_json FROM app_state WHERE id=1").fetchone()
         state = SEED_STATE if not row else json.loads(row["state_json"])
 
+    if not isinstance(state.get("pendingAccessRequests"), list):
+        state["pendingAccessRequests"] = []
+    if not isinstance(state.get("superUserNotifications"), list):
+        state["superUserNotifications"] = []
     ensure_archive_defaults(state)
     ensure_trainer_accounts(state)
     return state
@@ -266,35 +273,55 @@ class Handler(SimpleHTTPRequestHandler):
             password = payload.get("password", "")
             state = load_state()
             user = next((u for u in state.get("users", []) if u.get("email", "").strip().lower() == email and u.get("password") == password), None)
-            if not user:
-                self._send_json({"error": "invalid_credentials"}, 401)
+            if user:
+                self._send_json({"user": user})
                 return
-            self._send_json({"user": user})
+
+            request = next((r for r in state.get("pendingAccessRequests", []) if r.get("email", "").strip().lower() == email and r.get("password") == password), None)
+            if request and request.get("status") == "pending":
+                self._send_json({"error": "access_pending"}, 403)
+                return
+            if request and request.get("status") == "rejected":
+                self._send_json({"error": "access_denied"}, 403)
+                return
+
+            self._send_json({"error": "invalid_credentials"}, 401)
             return
 
         if self.path == "/api/register":
             payload = self._read_json()
             state = load_state()
             users = state.get("users", [])
+            requests = state.get("pendingAccessRequests", [])
+            notifications = state.get("superUserNotifications", [])
             email = payload.get("email", "").strip().lower()
             if not payload.get("name") or not email or not payload.get("password"):
                 self._send_json({"error": "invalid_payload"}, 400)
                 return
-            if any(u.get("email", "").strip().lower() == email for u in users):
+            if any(u.get("email", "").strip().lower() == email for u in users) or any(r.get("email", "").strip().lower() == email for r in requests):
                 self._send_json({"error": "email_exists"}, 409)
                 return
-            new_id = max([u.get("id", 0) for u in users] + [0]) + 1
-            user = {
-                "id": new_id,
+
+            request_id = max([r.get("id", 0) for r in requests] + [0]) + 1
+            requests.append({
+                "id": request_id,
                 "name": payload["name"],
                 "email": email,
                 "phone": payload.get("phone", ""),
                 "password": payload["password"],
                 "role": payload.get("role", "trainer"),
-                "trainerId": state.get("trainers", [{}])[0].get("id") if payload.get("role") == "trainer" and state.get("trainers") else None,
-            }
-            users.append(user)
-            state["users"] = users
+                "status": "pending",
+                "requestedAt": payload.get("requestedAt") or "now",
+            })
+            notifications.append({
+                "id": max([n.get("id", 0) for n in notifications] + [0]) + 1,
+                "requestId": request_id,
+                "text": f"Новая заявка на доступ: {payload['name']} ({email})",
+                "createdAt": payload.get("requestedAt") or "now",
+            })
+
+            state["pendingAccessRequests"] = requests
+            state["superUserNotifications"] = notifications
             save_state(state)
             self._send_json({"state": state})
             return
