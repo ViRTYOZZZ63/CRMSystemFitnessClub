@@ -179,6 +179,35 @@ def ensure_archive_defaults(state):
     state["workoutsArchive"] = merged
 
 
+
+
+def ensure_trainer_accounts(state):
+    users = state.get("users")
+    trainers = state.get("trainers")
+    if not isinstance(users, list) or not isinstance(trainers, list):
+        return
+
+    next_user_id = max([int(u.get("id", 0)) for u in users if isinstance(u, dict)] + [0]) + 1
+    for trainer in trainers:
+        if not isinstance(trainer, dict):
+            continue
+        trainer_id = trainer.get("id")
+        has_account = any(isinstance(u, dict) and u.get("role") == "trainer" and int(u.get("trainerId", 0)) == int(trainer_id or 0) for u in users)
+        if has_account:
+            continue
+
+        users.append({
+            "id": next_user_id,
+            "name": trainer.get("name", f"Тренер {trainer_id}"),
+            "email": f"trainer{trainer_id}@pulsepoint.club",
+            "phone": "",
+            "password": "trainer123",
+            "role": "trainer",
+            "trainerId": trainer_id,
+        })
+        next_user_id += 1
+
+
 def db_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -200,6 +229,7 @@ def load_state():
         state = SEED_STATE if not row else json.loads(row["state_json"])
 
     ensure_archive_defaults(state)
+    ensure_trainer_accounts(state)
     return state
 
 
