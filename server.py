@@ -14,6 +14,7 @@ SEED_STATE = {
         {"id": 2, "name": "Алексей Волков", "email": "trainer@pulsepoint.club", "password": "trainer123", "role": "trainer", "trainerId": 1, "phone": "+7 927 102-33-44"},
         {"id": 3, "name": "Мария Исаева", "email": "hr@pulsepoint.club", "password": "hr123", "role": "hr", "phone": "+7 927 103-44-55"},
         {"id": 4, "name": "Ольга Соколова", "email": "finance@pulsepoint.club", "password": "finance123", "role": "accountant", "phone": "+7 927 104-55-66"},
+        {"id": 9, "name": "Супер Пользователь", "email": "super@pulsepoint.club", "password": "super123", "role": "superuser", "phone": "+7 927 109-55-66"},
     ],
     "trainers": [
         {"id": 1, "name": "Алексей Волков", "spec": "Силовой тренинг", "level": "Senior", "maxDailySlots": 4, "rate": 2200},
@@ -46,7 +47,168 @@ SEED_STATE = {
         {"id": 3, "client": "Виктор Осипов", "amount": 18900, "method": "Онлайн", "date": "2026-02-16"},
     ],
     "notes": [],
+    "pendingAccessRequests": [],
+    "superUserNotifications": [],
+    "workoutsArchive": [
+        {
+            "id": 1,
+            "trainerId": 1,
+            "title": "TABATA",
+            "level": "Высокоинтенсивная интервальная тренировка",
+            "description": "ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.",
+            "mediaType": "video",
+            "media": "/media/tabata.mp4",
+            "poster": "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80",
+        },
+        {
+            "id": 2,
+            "trainerId": 1,
+            "title": "MUSCLE TONING (MT)",
+            "level": "Классическая силовая тренировка",
+            "description": "ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ пОДГотовКИ.",
+            "mediaType": "video",
+            "media": "/media/muscle-toning-mt.mp4",
+            "poster": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+        },
+        {
+            "id": 3,
+            "trainerId": 1,
+            "title": "TRX MIX",
+            "level": "Функциональный тренинг",
+            "description": "ЭТО функциональная тренировка с использованием подвесных петель. Подходит для всех уровней подготовленности.МЫ ДОБАВИЛИ ИНТЕНСИВНОСТИ ПРИВЫЧНЫМ ДВИЖЕНИЯМ И СДЕЛАЛИ УРОК МАКСИМАЛЬНО ЭФФЕКТИВНЫМ.",
+            "mediaType": "video",
+            "media": "/media/trx-mix.mp4",
+            "poster": "https://images.unsplash.com/photo-1434608519344-49d77a699e1d?auto=format&fit=crop&w=1200&q=80",
+        },
+        {
+            "id": 4,
+            "trainerId": 1,
+            "title": "FIT FOR JUNIORS",
+            "level": "12-16 лет",
+            "description": "ЭТО ЗАНЯТИЕ В ТРЕНАЖЁРНОМ ЗАЛЕ ПОД КОНТРОЛЕМ ОПЫТНОГО ПЕРСОНАЛЬНОГО ТРЕНЕРА. ЗДЕСЬ ОЧЕНЬ ИНТЕРЕСНО, ВЕДЬ ВАШЕМУ РЕБЁНКУ ВСЕГДА ХОЧЕТСЯ ПОХОДИТЬ ПО БЕГОВОЙ ДОРОЖКЕ, ПОДНЯТЬ ШТАНГУ, ПОДЕРЖАТЬ В РУКАХ ГАНТЕЛИ. ЗДЕСЬ ЭТО МОЖНО СДЕЛАТЬ С ПОЛЬЗОЙ ДЛЯ ДЕЛА, А НЕ ПРОСТО ТАК, ПОТОМУ ЧТО «ХОЧУ». ЗДЕСЬ БУДЕТ РЕЗУЛЬТАТ",
+            "mediaType": "video",
+            "media": "/media/fit-for-juniors.mp4",
+            "poster": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
+        },
+        {
+            "id": 5,
+            "trainerId": 1,
+            "title": "PILATES",
+            "level": "Здоровая спина и суставы",
+            "description": "ЭТО НАПРАВЛЕНИЕ ОЧЕНЬ ПОЛЕЗНО ДЛЯ МЫШЦ СПИНЫ И ДЛЯ «УКРЕПЛЕНИЯ» ПОЗВОНОЧНИКА. СЛУЖИТ ОТЛИЧНОЙ ПРОФИЛАКТИКОЙ ЗАБОЛЕВАНИЙ ПОЗВОНОЧНИКА И суставов",
+            "mediaType": "video",
+            "media": "/media/pilates.mp4",
+            "poster": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80",
+        },
+        {
+            "id": 6,
+            "trainerId": 1,
+            "title": "STRETCHING",
+            "level": "Гибкость и восстановление",
+            "description": "ЭТО СПОКОЙНОЕ, МЕДЛЕННОЕ, НО ОЧЕНЬ ПОЛЕЗНОЕ ДЛЯ ВАШИХ МЫШЦ НАПРАВЛЕНИЕ УЛУЧШИТ ГИБКОСТЬ, ПОДВИЖНОСТЬ, ЭЛАСТИЧНОСТЬ МЫШЦ, СВЯЗОК, СУСТАВОВ. ОБЕСПЕЧИТ СНАБЖЕНИЕ КРОВЬЮ И КИСЛОРОДОМ РАБОТАЮЩИЕ МЫШЦЫ, ТЕМ САМЫМ ОКАЖЕТ ОЧЕНЬ ПОЛЕЗНОЕ ВЛИЯНИЕ НА НИХ. УСКОРИТ ВОССТАНОВЛЕНИЕ ПОСЛЕ СИЛОВЫХ ТРЕНИРОВОК.",
+            "mediaType": "video",
+            "media": "/media/stretching.mp4",
+            "poster": "https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1200&q=80",
+        }
+    ],
 }
+
+
+
+
+def _normalize_text(value):
+    return "".join(ch.lower() if ch.isalnum() else " " for ch in str(value or "")).split()
+
+
+def detect_media_path_for_title(title):
+    media_dir = BASE_DIR / "media"
+    if not media_dir.exists() or not media_dir.is_dir():
+        return None
+
+    supported_ext = {".mp4", ".webm", ".mov", ".m4v", ".gif"}
+    title_tokens = set(_normalize_text(title))
+
+    candidates = []
+    for file in media_dir.iterdir():
+        if not file.is_file():
+            continue
+        suffix = file.suffix.lower()
+        if suffix not in supported_ext:
+            continue
+
+        file_tokens = set(_normalize_text(file.stem))
+        overlap = len(title_tokens & file_tokens)
+        if title_tokens and overlap == 0:
+            continue
+
+        score = overlap * 10
+        if suffix == ".mp4":
+            score += 3
+        elif suffix == ".webm":
+            score += 2
+        elif suffix in {".mov", ".m4v"}:
+            score += 1
+
+        candidates.append((score, file.name))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+    return f"/media/{candidates[0][1]}"
+
+
+def ensure_archive_defaults(state):
+    archive = state.get("workoutsArchive")
+    if not isinstance(archive, list):
+        archive = []
+
+    by_title = {str(item.get("title", "")).strip().upper(): item for item in archive if isinstance(item, dict)}
+    for item in SEED_STATE.get("workoutsArchive", []):
+        key = str(item.get("title", "")).strip().upper()
+        if key not in by_title:
+            by_title[key] = dict(item)
+
+    merged = list(by_title.values())
+    for item in merged:
+        title = item.get("title")
+        found_media = detect_media_path_for_title(title)
+        if found_media:
+            item["mediaType"] = "video"
+            item["media"] = found_media
+        elif not item.get("media"):
+            item["mediaType"] = item.get("mediaType") or "video"
+
+    state["workoutsArchive"] = merged
+
+
+
+
+def ensure_trainer_accounts(state):
+    users = state.get("users")
+    trainers = state.get("trainers")
+    if not isinstance(users, list) or not isinstance(trainers, list):
+        return
+
+    next_user_id = max([int(u.get("id", 0)) for u in users if isinstance(u, dict)] + [0]) + 1
+    for trainer in trainers:
+        if not isinstance(trainer, dict):
+            continue
+        trainer_id = trainer.get("id")
+        has_account = any(isinstance(u, dict) and u.get("role") == "trainer" and int(u.get("trainerId", 0)) == int(trainer_id or 0) for u in users)
+        if has_account:
+            continue
+
+        users.append({
+            "id": next_user_id,
+            "name": trainer.get("name", f"Тренер {trainer_id}"),
+            "email": f"trainer{trainer_id}@pulsepoint.club",
+            "phone": "",
+            "password": "trainer123",
+            "role": "trainer",
+            "trainerId": trainer_id,
+        })
+        next_user_id += 1
 
 
 def db_conn():
@@ -67,9 +229,19 @@ def init_db():
 def load_state():
     with db_conn() as conn:
         row = conn.execute("SELECT state_json FROM app_state WHERE id=1").fetchone()
-        if not row:
-            return SEED_STATE
-        return json.loads(row["state_json"])
+        state = SEED_STATE if not row else json.loads(row["state_json"])
+
+    if not isinstance(state.get("pendingAccessRequests"), list):
+        state["pendingAccessRequests"] = []
+    if not isinstance(state.get("superUserNotifications"), list):
+        state["superUserNotifications"] = []
+    for user in state.get("users", []):
+        if isinstance(user, dict) and "isBlocked" not in user:
+            user["isBlocked"] = False
+
+    ensure_archive_defaults(state)
+    ensure_trainer_accounts(state)
+    return state
 
 
 def save_state(state):
@@ -105,37 +277,104 @@ class Handler(SimpleHTTPRequestHandler):
             password = payload.get("password", "")
             state = load_state()
             user = next((u for u in state.get("users", []) if u.get("email", "").strip().lower() == email and u.get("password") == password), None)
-            if not user:
-                self._send_json({"error": "invalid_credentials"}, 401)
+            if user:
+                if user.get("isBlocked"):
+                    self._send_json({"error": "account_blocked"}, 403)
+                    return
+                self._send_json({"user": user})
                 return
-            self._send_json({"user": user})
+
+            request = next((r for r in state.get("pendingAccessRequests", []) if r.get("email", "").strip().lower() == email and r.get("password") == password), None)
+            if request and request.get("status") == "pending":
+                self._send_json({"error": "access_pending"}, 403)
+                return
+            if request and request.get("status") == "rejected":
+                self._send_json({"error": "access_denied"}, 403)
+                return
+
+            self._send_json({"error": "invalid_credentials"}, 401)
             return
 
         if self.path == "/api/register":
             payload = self._read_json()
             state = load_state()
             users = state.get("users", [])
+            requests = state.get("pendingAccessRequests", [])
+            notifications = state.get("superUserNotifications", [])
             email = payload.get("email", "").strip().lower()
-            if not payload.get("name") or not email or not payload.get("password"):
+            role = payload.get("role", "trainer")
+            if not payload.get("name") or not email or not payload.get("password") or role not in {"trainer", "hr", "accountant", "admin"}:
                 self._send_json({"error": "invalid_payload"}, 400)
                 return
-            if any(u.get("email", "").strip().lower() == email for u in users):
+            if len(str(payload.get("password", ""))) < 6:
+                self._send_json({"error": "weak_password"}, 400)
+                return
+            if any(u.get("email", "").strip().lower() == email for u in users) or any(r.get("email", "").strip().lower() == email for r in requests):
                 self._send_json({"error": "email_exists"}, 409)
                 return
-            new_id = max([u.get("id", 0) for u in users] + [0]) + 1
-            user = {
-                "id": new_id,
+
+            request_id = max([r.get("id", 0) for r in requests] + [0]) + 1
+            requests.append({
+                "id": request_id,
                 "name": payload["name"],
                 "email": email,
                 "phone": payload.get("phone", ""),
                 "password": payload["password"],
                 "role": payload.get("role", "trainer"),
-                "trainerId": state.get("trainers", [{}])[0].get("id") if payload.get("role") == "trainer" and state.get("trainers") else None,
-            }
-            users.append(user)
-            state["users"] = users
+                "status": "pending",
+                "requestedAt": payload.get("requestedAt") or "now",
+            })
+            notifications.append({
+                "id": max([n.get("id", 0) for n in notifications] + [0]) + 1,
+                "requestId": request_id,
+                "text": f"Новая заявка на доступ: {payload['name']} ({email})",
+                "createdAt": payload.get("requestedAt") or "now",
+            })
+
+            state["pendingAccessRequests"] = requests
+            state["superUserNotifications"] = notifications
             save_state(state)
             self._send_json({"state": state})
+            return
+
+        if self.path == "/api/forgot-password":
+            payload = self._read_json()
+            state = load_state()
+            email = payload.get("email", "").strip().lower()
+            if not email:
+                self._send_json({"error": "invalid_payload"}, 400)
+                return
+
+            user = next((u for u in state.get("users", []) if u.get("email", "").strip().lower() == email), None)
+            if not user:
+                self._send_json({"ok": True})
+                return
+
+            user["isBlocked"] = True
+            notifications = state.get("superUserNotifications", [])
+            requests = state.get("pendingAccessRequests", [])
+            req_id = max([r.get("id", 0) for r in requests] + [0]) + 1
+            requests.append({
+                "id": req_id,
+                "name": user.get("name"),
+                "email": user.get("email"),
+                "phone": user.get("phone", ""),
+                "password": user.get("password", ""),
+                "role": user.get("role", "trainer"),
+                "status": "password_reset",
+                "requestedAt": payload.get("requestedAt") or "now",
+                "userId": user.get("id"),
+            })
+            notifications.append({
+                "id": max([n.get("id", 0) for n in notifications] + [0]) + 1,
+                "requestId": req_id,
+                "text": f"Сброс пароля: {user.get('name')} ({email})",
+                "createdAt": payload.get("requestedAt") or "now",
+            })
+            state["pendingAccessRequests"] = requests
+            state["superUserNotifications"] = notifications
+            save_state(state)
+            self._send_json({"ok": True})
             return
 
         if self.path == "/api/state":

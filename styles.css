@@ -262,6 +262,45 @@ textarea { min-height: 72px; }
 .card { padding: 18px; }
 .card h3 { margin: 0 0 14px; padding-top: 10px; }
 
+.workout-archive-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.workout-archive-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(15,23,42,.52);
+}
+
+.workout-archive-item h4 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.workout-archive-item p {
+  margin: 0;
+  color: #dbeafe;
+  line-height: 1.55;
+}
+
+.workout-archive-level {
+  color: #67e8f9 !important;
+  margin-bottom: 8px !important;
+}
+
+.workout-archive-image {
+  width: 100%;
+  height: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
 .table-wrap {
   margin-top: 12px;
   overflow: auto;
@@ -278,6 +317,26 @@ tbody tr:hover { background: rgba(148,163,184,.08); }
 .status { margin-top: 12px; }
 .form-grid, .auth-form-stack { margin-top: 6px; }
 
+
+.metrics-rich {
+  gap: 14px;
+}
+
+.metrics-rich .metric {
+  padding: 14px;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 20px rgba(2,6,23,.18);
+}
+
+.metrics-rich .metric small {
+  display: block;
+  margin-top: 6px;
+  color: #93c5fd;
+}
+
+.metrics-rich .metric .btn {
+  margin-top: 10px;
+}
 .bars { display: grid; gap: 8px; }
 .bar-row { display: grid; grid-template-columns: 200px 1fr 70px; gap: 8px; align-items: center; }
 .bar { height: 12px; border-radius: 999px; background: rgba(148,163,184,.2); overflow: hidden; }
@@ -357,6 +416,7 @@ tbody tr:hover { background: rgba(148,163,184,.08); }
   .tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 12px; }
   .tab-btn { white-space: nowrap; }
   .form-grid { grid-template-columns: 1fr; }
+  .workout-archive-item { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -383,4 +443,28 @@ tbody tr:hover { background: rgba(148,163,184,.08); }
   .bar-row b { justify-self: end; }
   .calendar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .weekday { text-align: left; }
+}
+
+
+.auth-form-stack .btn + .btn { margin-top: 8px; }
+
+@media (max-width: 980px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 1fr; }
+  table { min-width: 560px; }
+}
+
+@media (max-width: 680px) {
+  .metrics { grid-template-columns: 1fr; }
+  .metrics-rich .metric { padding: 12px; }
+  .workout-archive-item { grid-template-columns: 1fr; }
+  .workout-archive-image { max-height: 220px; }
+  .switch-row { grid-template-columns: 1fr; display: grid; gap: 8px; }
+  table { min-width: 480px; }
+}
+
+@media (max-width: 420px) {
+  .site-header h1 { font-size: 1.2rem; }
+  .card { padding: 12px; }
+  .table-wrap { border-radius: 10px; }
 }
