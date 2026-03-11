@@ -1,0 +1,16 @@
+services:
+  pulsepoint-crm:
+    build:
+      context: .
+    container_name: pulsepoint-crm
+    environment:
+      PORT: "4173"
+      CRM_DB_PATH: /data/crm.db
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
+    volumes:
+      - pulsepoint-crm-data:/data
+
+volumes:
+  pulsepoint-crm-data:

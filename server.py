@@ -1,12 +1,17 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 import json
+import mimetypes
+import os
 import sqlite3
 from functools import partial
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / 'crm.db'
+DIST_DIR = BASE_DIR / 'dist'
+MEDIA_DIR = BASE_DIR / 'media'
+DB_PATH = Path(os.getenv('CRM_DB_PATH', str(BASE_DIR / 'crm.db')))
 
 SEED_STATE = {
     "users": [
@@ -54,8 +59,8 @@ SEED_STATE = {
             "id": 1,
             "trainerId": 1,
             "title": "TABATA",
-            "level": "Высокоинтенсивная интервальная тренировка",
-            "description": "ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.",
+            "level": "Высокоинтенсивный интервальный формат",
+            "description": "Интенсивная интервальная тренировка, которая быстро разгоняет пульс, помогает сжигать калории и развивать выносливость. Подходит тем, кто любит энергичный темп и хочет получить заметный эффект за короткое время.",
             "mediaType": "video",
             "media": "/media/tabata.mp4",
             "poster": "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80",
@@ -64,8 +69,8 @@ SEED_STATE = {
             "id": 2,
             "trainerId": 1,
             "title": "MUSCLE TONING (MT)",
-            "level": "Классическая силовая тренировка",
-            "description": "ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ пОДГотовКИ.",
+            "level": "Силовая тренировка на всё тело",
+            "description": "Классическая силовая программа на все основные группы мышц. Занятие сочетает грамотную разминку, основную нагрузку и мягкое восстановление, поэтому помогает укрепить тело и улучшить рельеф без перегруза.",
             "mediaType": "video",
             "media": "/media/muscle-toning-mt.mp4",
             "poster": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
@@ -75,7 +80,7 @@ SEED_STATE = {
             "trainerId": 1,
             "title": "TRX MIX",
             "level": "Функциональный тренинг",
-            "description": "ЭТО функциональная тренировка с использованием подвесных петель. Подходит для всех уровней подготовленности.МЫ ДОБАВИЛИ ИНТЕНСИВНОСТИ ПРИВЫЧНЫМ ДВИЖЕНИЯМ И СДЕЛАЛИ УРОК МАКСИМАЛЬНО ЭФФЕКТИВНЫМ.",
+            "description": "Функциональная тренировка с использованием подвесных петель TRX. Она развивает силу, баланс и контроль корпуса, а упражнения легко адаптируются под разный уровень подготовки.",
             "mediaType": "video",
             "media": "/media/trx-mix.mp4",
             "poster": "https://images.unsplash.com/photo-1434608519344-49d77a699e1d?auto=format&fit=crop&w=1200&q=80",
@@ -84,8 +89,8 @@ SEED_STATE = {
             "id": 4,
             "trainerId": 1,
             "title": "FIT FOR JUNIORS",
-            "level": "12-16 лет",
-            "description": "ЭТО ЗАНЯТИЕ В ТРЕНАЖЁРНОМ ЗАЛЕ ПОД КОНТРОЛЕМ ОПЫТНОГО ПЕРСОНАЛЬНОГО ТРЕНЕРА. ЗДЕСЬ ОЧЕНЬ ИНТЕРЕСНО, ВЕДЬ ВАШЕМУ РЕБЁНКУ ВСЕГДА ХОЧЕТСЯ ПОХОДИТЬ ПО БЕГОВОЙ ДОРОЖКЕ, ПОДНЯТЬ ШТАНГУ, ПОДЕРЖАТЬ В РУКАХ ГАНТЕЛИ. ЗДЕСЬ ЭТО МОЖНО СДЕЛАТЬ С ПОЛЬЗОЙ ДЛЯ ДЕЛА, А НЕ ПРОСТО ТАК, ПОТОМУ ЧТО «ХОЧУ». ЗДЕСЬ БУДЕТ РЕЗУЛЬТАТ",
+            "level": "Группа 12-16 лет",
+            "description": "Тренировка для подростков 12-16 лет, где внимание уделяется технике, координации и безопасному знакомству с тренажерным залом. Формат помогает укрепить тело, развить дисциплину и сохранить интерес к спорту.",
             "mediaType": "video",
             "media": "/media/fit-for-juniors.mp4",
             "poster": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
@@ -94,8 +99,8 @@ SEED_STATE = {
             "id": 5,
             "trainerId": 1,
             "title": "PILATES",
-            "level": "Здоровая спина и суставы",
-            "description": "ЭТО НАПРАВЛЕНИЕ ОЧЕНЬ ПОЛЕЗНО ДЛЯ МЫШЦ СПИНЫ И ДЛЯ «УКРЕПЛЕНИЯ» ПОЗВОНОЧНИКА. СЛУЖИТ ОТЛИЧНОЙ ПРОФИЛАКТИКОЙ ЗАБОЛЕВАНИЙ ПОЗВОНОЧНИКА И суставов",
+            "level": "Осанка, кор и подвижность",
+            "description": "Спокойная и точная программа для укрепления мышц кора, осанки и подвижности суставов. Pilates помогает снять напряжение со спины, улучшить контроль над телом и почувствовать легкость в движении.",
             "mediaType": "video",
             "media": "/media/pilates.mp4",
             "poster": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80",
@@ -105,16 +110,13 @@ SEED_STATE = {
             "trainerId": 1,
             "title": "STRETCHING",
             "level": "Гибкость и восстановление",
-            "description": "ЭТО СПОКОЙНОЕ, МЕДЛЕННОЕ, НО ОЧЕНЬ ПОЛЕЗНОЕ ДЛЯ ВАШИХ МЫШЦ НАПРАВЛЕНИЕ УЛУЧШИТ ГИБКОСТЬ, ПОДВИЖНОСТЬ, ЭЛАСТИЧНОСТЬ МЫШЦ, СВЯЗОК, СУСТАВОВ. ОБЕСПЕЧИТ СНАБЖЕНИЕ КРОВЬЮ И КИСЛОРОДОМ РАБОТАЮЩИЕ МЫШЦЫ, ТЕМ САМЫМ ОКАЖЕТ ОЧЕНЬ ПОЛЕЗНОЕ ВЛИЯНИЕ НА НИХ. УСКОРИТ ВОССТАНОВЛЕНИЕ ПОСЛЕ СИЛОВЫХ ТРЕНИРОВОК.",
+            "description": "Мягкая восстановительная тренировка, направленная на гибкость, подвижность и комфорт в теле. Занятие помогает снять мышечное напряжение, улучшить амплитуду движений и ускорить восстановление после силовых нагрузок.",
             "mediaType": "video",
             "media": "/media/stretching.mp4",
             "poster": "https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1200&q=80",
         }
     ],
 }
-
-
-
 
 def _normalize_text(value):
     return "".join(ch.lower() if ch.isalnum() else " " for ch in str(value or "")).split()
@@ -218,6 +220,7 @@ def db_conn():
 
 
 def init_db():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with db_conn() as conn:
         conn.execute("CREATE TABLE IF NOT EXISTS app_state (id INTEGER PRIMARY KEY CHECK (id=1), state_json TEXT NOT NULL)")
         row = conn.execute("SELECT state_json FROM app_state WHERE id=1").fetchone()
@@ -251,6 +254,9 @@ def save_state(state):
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def _parse_path(self):
+        return unquote(urlparse(self.path).path)
+
     def _send_json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -259,19 +265,102 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_html(self, body, status=200):
+        data = body.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_file(self, file_path):
+        guessed_type, _ = mimetypes.guess_type(file_path.name)
+        content_type = guessed_type or "application/octet-stream"
+        data = file_path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _safe_path(self, base_dir, relative_path):
+        target = (base_dir / relative_path.lstrip("/")).resolve()
+        try:
+            target.relative_to(base_dir.resolve())
+        except ValueError:
+            return None
+        return target
+
+    def _serve_static(self, request_path):
+        if request_path.startswith("/media/"):
+            media_file = self._safe_path(MEDIA_DIR, request_path.removeprefix("/media/"))
+            if media_file and media_file.is_file():
+                self._send_file(media_file)
+                return True
+            self.send_error(404, "media_not_found")
+            return True
+
+        if not DIST_DIR.exists():
+            if request_path in {"", "/"}:
+                self._send_html(
+                    """<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PulsePoint CRM</title>
+    <style>
+      body { margin: 0; font-family: Inter, Segoe UI, sans-serif; background: #08131f; color: #e2e8f0; }
+      main { max-width: 760px; margin: 48px auto; padding: 24px; border-radius: 18px; background: rgba(15, 23, 42, .92); border: 1px solid rgba(148, 163, 184, .2); }
+      code { color: #67e8f9; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Frontend build not found</h1>
+      <p>Run <code>npm install</code> and <code>npm run build</code> for production mode.</p>
+      <p>For local development, start Vite with <code>npm run dev</code> and open <code>http://localhost:5173</code>.</p>
+    </main>
+  </body>
+</html>"""
+                )
+                return True
+            self.send_error(404, "frontend_build_not_found")
+            return True
+
+        if request_path in {"", "/"}:
+            self._send_file(DIST_DIR / "index.html")
+            return True
+
+        asset_path = self._safe_path(DIST_DIR, request_path)
+        if asset_path and asset_path.is_file():
+            self._send_file(asset_path)
+            return True
+
+        if "." in Path(request_path).name:
+            self.send_error(404, "asset_not_found")
+            return True
+
+        self._send_file(DIST_DIR / "index.html")
+        return True
+
     def _read_json(self):
         length = int(self.headers.get("Content-Length", "0"))
         data = self.rfile.read(length) if length else b"{}"
         return json.loads(data.decode("utf-8"))
 
     def do_GET(self):
-        if self.path == "/api/bootstrap":
+        request_path = self._parse_path()
+        if request_path == "/api/bootstrap":
             self._send_json({"state": load_state()})
+            return
+        if self._serve_static(request_path):
             return
         return super().do_GET()
 
     def do_POST(self):
-        if self.path == "/api/login":
+        request_path = self._parse_path()
+        if request_path == "/api/login":
             payload = self._read_json()
             email = payload.get("email", "").strip().lower()
             password = payload.get("password", "")
@@ -295,7 +384,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json({"error": "invalid_credentials"}, 401)
             return
 
-        if self.path == "/api/register":
+        if request_path == "/api/register":
             payload = self._read_json()
             state = load_state()
             users = state.get("users", [])
@@ -337,7 +426,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json({"state": state})
             return
 
-        if self.path == "/api/forgot-password":
+        if request_path == "/api/forgot-password":
             payload = self._read_json()
             state = load_state()
             email = payload.get("email", "").strip().lower()
@@ -377,7 +466,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json({"ok": True})
             return
 
-        if self.path == "/api/state":
+        if request_path == "/api/state":
             payload = self._read_json()
             state = payload.get("state")
             if not isinstance(state, dict):
@@ -392,6 +481,8 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     init_db()
-    server = ThreadingHTTPServer(("0.0.0.0", 4173), partial(Handler, directory=str(BASE_DIR)))
-    print("Serving on http://0.0.0.0:4173")
+    port = int(os.getenv("PORT", "4173"))
+    server = ThreadingHTTPServer(("0.0.0.0", port), partial(Handler, directory=str(BASE_DIR)))
+    print(f"Serving PulsePoint CRM on http://0.0.0.0:{port}")
     server.serve_forever()
+

@@ -1,14 +1,14 @@
-const { useMemo, useState, useEffect } = React;
+﻿import { useEffect, useMemo, useState } from 'react';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 const ARCHIVE_MEDIA_FALLBACKS = {
-  TABATA: ['/media/tabata.mp4', 'media/tabata.mp4', '/media/tabata.webm', 'media/tabata.webm', 'https://cdn.coverr.co/videos/coverr-young-woman-doing-jumping-exercises-1577720094948?download=1080p.mp4'],
-  'MUSCLE TONING (MT)': ['/media/muscle-toning-mt.mp4', '/media/muscle-toning-mt.webm'],
-  'TRX MIX': ['/media/trx-mix.mp4', '/media/trx-mix.webm'],
-  'FIT FOR JUNIORS': ['/media/fit-for-juniors.mp4', '/media/fit-for-juniors.webm'],
-  PILATES: ['/media/pilates.mp4', '/media/pilates.webm'],
-  STRETCHING: ['/media/stretching.mp4', '/media/stretching.webm'],
+  TABATA: ['/media/tabata.mp4'],
+  'MUSCLE TONING (MT)': ['/media/Muscle_Toning.MP4', '/media/muscle-toning-mt.mp4'],
+  'TRX MIX': ['/media/TRX_Mix.MP4', '/media/trx-mix.mp4'],
+  'FIT FOR JUNIORS': ['/media/Fit_For_Juniors.MP4', '/media/fit-for-juniors.mp4'],
+  PILATES: ['/media/Pilates.MOV', '/media/pilates.mp4'],
+  STRETCHING: ['/media/Stretching.MOV', '/media/stretching.mp4'],
 };
 
 const seedData = {
@@ -100,69 +100,68 @@ const seedData = {
   pendingAccessRequests: [],
   superUserNotifications: [],
   workoutsArchive: [
-    {
-      id: 1,
-      trainerId: 1,
-      title: 'TABATA',
-      level: 'Высокоинтенсивная интервальная тренировка',
-      description: 'ЭТО СОВРЕМЕННОЕ НАПРАВЛЕНИЕ, ДАЮЩЕЕ ЯРКО ВЫРАЖЕННЫЙ РЕЗУЛЬТАТ. ЕСЛИ ВЫ ХОТИТЕ СНИЗИТЬ ВЕС - ВАМ СЮДА. ЕСЛИ ВЫ ХОТИТЕ УВЕЛИЧИТЬ ВЫНОСЛИВОСТЬ - BAM СЮДА. ЕСЛИ ВЫ ХОТИТЕ НЕМНОГО ПОДКАЧАТЬ МЫШЦЫ И ДОБАВИТЬ ИМ ЖЁСТКОСТИ - ВАМ ТОЖЕ СЮДА.',
-      mediaType: 'video',
-      media: '/media/tabata.mp4',
-      poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
-    },
-    {
-      id: 2,
-      trainerId: 1,
-      title: 'MUSCLE TONING (MT)',
-      level: 'Классическая силовая тренировка',
-      description: 'ЭТО КЛАССИЧЕСКАЯ СИЛОВАЯ ТРЕНИРОВКА НА ВСЕ ГРУППЫ МЫШЦ. ТРЕНИРОВКА ОБЯЗАТЕЛЬНО ВКЛЮЧАЕТ В СЕБЯ ИНТЕНСИВНУЮ АЭРОБНУЮ РАЗМИНКУ, АКТИВНУЮ СИЛОВУЮ ЧАСТЬ И МЕДЛЕННУЮ ЗАМИНКУ. ЗАНЯТИЯ ПРЕДПОЛАГАЮТ НАГРУЗКУ КАК СРЕДНЕЙ, ТАК И ВЫСОКОЙ ИНТЕНСИВНОСТИ. ПОДХОДИТ ДЛЯ ЛЮБОГО УРОВНЯ пОДГотовКИ.',
-      mediaType: 'video',
-      media: '/media/muscle-toning-mt.mp4',
-      poster: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
-    },
-    {
-      id: 3,
-      trainerId: 1,
-      title: 'TRX MIX',
-      level: 'Функциональный тренинг',
-      description: 'ЭТО функциональная тренировка с использованием подвесных петель. Подходит для всех уровней подготовленности.МЫ ДОБАВИЛИ ИНТЕНСИВНОСТИ ПРИВЫЧНЫМ ДВИЖЕНИЯМ И СДЕЛАЛИ УРОК МАКСИМАЛЬНО ЭФФЕКТИВНЫМ.',
-      mediaType: 'video',
-      media: '/media/trx-mix.mp4',
-      poster: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?auto=format&fit=crop&w=1200&q=80',
-    },
-    {
-      id: 4,
-      trainerId: 1,
-      title: 'FIT FOR JUNIORS',
-      level: '12-16 лет',
-      description: 'ЭТО ЗАНЯТИЕ В ТРЕНАЖЁРНОМ ЗАЛЕ ПОД КОНТРОЛЕМ ОПЫТНОГО ПЕРСОНАЛЬНОГО ТРЕНЕРА. ЗДЕСЬ ОЧЕНЬ ИНТЕРЕСНО, ВЕДЬ ВАШЕМУ РЕБЁНКУ ВСЕГДА ХОЧЕТСЯ ПОХОДИТЬ ПО БЕГОВОЙ ДОРОЖКЕ, ПОДНЯТЬ ШТАНГУ, ПОДЕРЖАТЬ В РУКАХ ГАНТЕЛИ. ЗДЕСЬ ЭТО МОЖНО СДЕЛАТЬ С ПОЛЬЗОЙ ДЛЯ ДЕЛА, А НЕ ПРОСТО ТАК, ПОТОМУ ЧТО «ХОЧУ». ЗДЕСЬ БУДЕТ РЕЗУЛЬТАТ',
-      mediaType: 'video',
-      media: '/media/fit-for-juniors.mp4',
-      poster: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
-    },
-    {
-      id: 5,
-      trainerId: 1,
-      title: 'PILATES',
-      level: 'Здоровая спина и суставы',
-      description: 'ЭТО НАПРАВЛЕНИЕ ОЧЕНЬ ПОЛЕЗНО ДЛЯ МЫШЦ СПИНЫ И ДЛЯ «УКРЕПЛЕНИЯ» ПОЗВОНОЧНИКА. СЛУЖИТ ОТЛИЧНОЙ ПРОФИЛАКТИКОЙ ЗАБОЛЕВАНИЙ ПОЗВОНОЧНИКА И суставов',
-      mediaType: 'video',
-      media: '/media/pilates.mp4',
-      poster: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80',
-    },
-    {
-      id: 6,
-      trainerId: 1,
-      title: 'STRETCHING',
-      level: 'Гибкость и восстановление',
-      description: 'ЭТО СПОКОЙНОЕ, МЕДЛЕННОЕ, НО ОЧЕНЬ ПОЛЕЗНОЕ ДЛЯ ВАШИХ МЫШЦ НАПРАВЛЕНИЕ УЛУЧШИТ ГИБКОСТЬ, ПОДВИЖНОСТЬ, ЭЛАСТИЧНОСТЬ МЫШЦ, СВЯЗОК, СУСТАВОВ. ОБЕСПЕЧИТ СНАБЖЕНИЕ КРОВЬЮ И КИСЛОРОДОМ РАБОТАЮЩИЕ МЫШЦЫ, ТЕМ САМЫМ ОКАЖЕТ ОЧЕНЬ ПОЛЕЗНОЕ ВЛИЯНИЕ НА НИХ. УСКОРИТ ВОССТАНОВЛЕНИЕ ПОСЛЕ СИЛОВЫХ ТРЕНИРОВОК.',
-      mediaType: 'video',
-      media: '/media/stretching.mp4',
-      poster: 'https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1200&q=80',
-    },
-  ],
+  {
+    id: 1,
+    trainerId: 1,
+    title: 'TABATA',
+    level: 'Высокоинтенсивный интервальный формат',
+    description: 'Интенсивная интервальная тренировка, которая быстро разгоняет пульс, помогает сжигать калории и развивать выносливость. Подходит тем, кто любит энергичный темп и хочет получить заметный эффект за короткое время.',
+    mediaType: 'video',
+    media: '/media/tabata.mp4',
+    poster: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 2,
+    trainerId: 1,
+    title: 'MUSCLE TONING (MT)',
+    level: 'Силовая тренировка на всё тело',
+    description: 'Классическая силовая программа на все основные группы мышц. Занятие сочетает грамотную разминку, основную нагрузку и мягкое восстановление, поэтому помогает укрепить тело и улучшить рельеф без перегруза.',
+    mediaType: 'video',
+    media: '/media/muscle-toning-mt.mp4',
+    poster: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 3,
+    trainerId: 1,
+    title: 'TRX MIX',
+    level: 'Функциональный тренинг',
+    description: 'Функциональная тренировка с использованием подвесных петель TRX. Она развивает силу, баланс и контроль корпуса, а упражнения легко адаптируются под разный уровень подготовки.',
+    mediaType: 'video',
+    media: '/media/trx-mix.mp4',
+    poster: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 4,
+    trainerId: 1,
+    title: 'FIT FOR JUNIORS',
+    level: 'Группа 12-16 лет',
+    description: 'Тренировка для подростков 12-16 лет, где внимание уделяется технике, координации и безопасному знакомству с тренажерным залом. Формат помогает укрепить тело, развить дисциплину и сохранить интерес к спорту.',
+    mediaType: 'video',
+    media: '/media/fit-for-juniors.mp4',
+    poster: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 5,
+    trainerId: 1,
+    title: 'PILATES',
+    level: 'Осанка, кор и подвижность',
+    description: 'Спокойная и точная программа для укрепления мышц кора, осанки и подвижности суставов. Pilates помогает снять напряжение со спины, улучшить контроль над телом и почувствовать легкость в движении.',
+    mediaType: 'video',
+    media: '/media/pilates.mp4',
+    poster: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 6,
+    trainerId: 1,
+    title: 'STRETCHING',
+    level: 'Гибкость и восстановление',
+    description: 'Мягкая восстановительная тренировка, направленная на гибкость, подвижность и комфорт в теле. Занятие помогает снять мышечное напряжение, улучшить амплитуду движений и ускорить восстановление после силовых нагрузок.',
+    mediaType: 'video',
+    media: '/media/stretching.mp4',
+    poster: 'https://images.unsplash.com/photo-1549576490-b0b4831ef60a?auto=format&fit=crop&w=1200&q=80',
+  },
+],
 };
-
 const roleLabels = {
   admin: 'Администратор',
   trainer: 'Тренер',
@@ -172,13 +171,54 @@ const roleLabels = {
 };
 
 const roleTabs = {
-  admin: ['Обзор', 'Календарь нагрузки', 'Тренеры', 'Расписание', 'Учётки', 'Зарплаты'],
+  admin: ['Рабочий стол', 'Календарь нагрузки', 'Тренеры', 'Расписание', 'Аккаунты', 'Зарплаты'],
   trainer: ['Панель', 'Мои занятия', 'Клиенты', 'Рабочее время'],
   hr: ['Команда', 'Найм', 'Сертификации', 'Посещаемость'],
   accountant: ['Финансы', 'Платежи', 'Выплаты', 'Прогноз'],
   superuser: ['Доступы и роли'],
 };
 
+const LOADING_SCENES = [
+  {
+    kicker: 'Private Club Console',
+    title: 'Пусть этот день начнётся спокойно и уверенно',
+    message: 'Подготавливаем интерфейс клуба, актуальные роли команды и персональные рабочие контуры без лишнего шума.',
+    note: 'PulsePoint собирает премиальное пространство для красивого старта смены.',
+  },
+  {
+    kicker: 'Black Signature Launch',
+    title: 'Хорошего рабочего дня и точных решений',
+    message: 'Синхронизируем расписание, тренерские программы и финансовую картину, чтобы всё открывалось в одном ритме.',
+    note: 'Загрузка идёт на чёрной сцене с мягкой подачей и живой динамикой.',
+  },
+  {
+    kicker: 'Executive Warmup',
+    title: 'Пусть сегодня всё складывается легко',
+    message: 'Готовим авторизацию, ключевые модули и данные клуба так, будто открывается приватный фитнес-лаунж.',
+    note: 'Ещё несколько мгновений и система перейдёт в рабочий режим.',
+  },
+  {
+    kicker: 'Concierge Mode',
+    title: 'Спокойной смены и сильной энергии команде',
+    message: 'Приводим в порядок доступы, аналитику и архив программ, чтобы продукт ощущался дорогим с первого экрана.',
+    note: 'Интерфейс раскрывается постепенно, без резких скачков и пустых состояний.',
+  },
+  {
+    kicker: 'Premium Access Layer',
+    title: 'Пусть день будет продуктивным и красивым',
+    message: 'Собираем статус клуба в один аккуратный поток: сотрудники, тренировки, деньги и сервис для клиентов.',
+    note: 'Заставка меняется при каждом новом открытии, сохраняя эффект живого продукта.',
+  },
+  {
+    kicker: 'Signature Opening',
+    title: 'Пусть сегодня будет меньше суеты и больше результата',
+    message: 'Финализируем визуальные детали и рабочие панели, чтобы CRM выглядела как полноценный show-ready продукт.',
+    note: 'Чёрный фон, мягкие ореолы и плавная инерция создают дорогую подачу.',
+  },
+];
+
+const pickRandomItem = (items) => items[Math.floor(Math.random() * items.length)] || items[0] || {};
+const archiveDefaultsByTitle = new Map(seedData.workoutsArchive.map((item) => [String(item.title || '').trim().toUpperCase(), item]));
 const money = (v) => `${Number(v).toLocaleString('ru-RU')} ₽`;
 const nextId = (arr) => (arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1);
 const byId = (arr, id) => arr.find((x) => x.id === Number(id));
@@ -253,23 +293,27 @@ function normalizeState(rawState) {
   }));
 
   const archiveByTitle = new Map((Array.isArray(merged.workoutsArchive) ? merged.workoutsArchive : []).map((item) => [String(item.title || '').trim().toUpperCase(), item]));
-  seedData.workoutsArchive.forEach((item) => {
-    const key = String(item.title || '').trim().toUpperCase();
+  archiveDefaultsByTitle.forEach((item, key) => {
     if (!archiveByTitle.has(key)) archiveByTitle.set(key, item);
   });
 
-  merged.workoutsArchive = [...archiveByTitle.values()].map((item) => {
-    const media = String(item.media || item.image || '').trim();
-    const fallbackSources = getArchiveFallbackSources(item.title);
-    const mediaType = item.mediaType || (fallbackSources.length || media ? 'video' : 'image');
+  merged.workoutsArchive = [...archiveByTitle.entries()].map(([key, item]) => {
+    const defaults = archiveDefaultsByTitle.get(key) || {};
+    const media = String(item.media || item.image || defaults.media || defaults.image || '').trim();
+    const title = item.title || defaults.title || '';
+    const fallbackSources = getArchiveFallbackSources(title);
+    const mediaType = item.mediaType || defaults.mediaType || (fallbackSources.length || media ? 'video' : 'image');
     return {
+      ...defaults,
       ...item,
+      title,
+      level: defaults.level || item.level || '',
+      description: defaults.description || item.description || '',
       mediaType,
       media: media || fallbackSources[0] || '',
-      poster: item.poster || item.image || '',
+      poster: item.poster || item.image || defaults.poster || defaults.image || '',
     };
   });
-
   return merged;
 }
 
@@ -300,6 +344,9 @@ function App() {
   const [authMessage, setAuthMessage] = useState({ text: '', type: '' });
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', phone: '', password: '', role: 'trainer' });
+  const [loadingScene] = useState(() => pickRandomItem(LOADING_SCENES));
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [minimumSplashPassed, setMinimumSplashPassed] = useState(false);
 
   useEffect(() => {
     async function bootstrap() {
@@ -319,8 +366,28 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setMinimumSplashPassed(true), 2200);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setLoadingProgress((prev) => {
+        const ceiling = dbReady && db ? 100 : 88;
+        if (prev >= ceiling) return prev;
+        const delta = ceiling === 100
+          ? Math.max(4, Math.ceil((100 - prev) / 4))
+          : Math.max(1, Math.ceil((88 - prev) / 12));
+        return Math.min(ceiling, prev + delta);
+      });
+    }, 90);
+
+    return () => window.clearInterval(interval);
+  }, [db, dbReady]);
+
+  useEffect(() => {
     if (!dbReady || !db) return;
-    fetch(`${API_BASE}/state`, {
+    fetch(API_BASE + '/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: db }),
@@ -358,19 +425,11 @@ function App() {
     return { revenue, classCount, avgDailyClasses, totalPayroll, clientsCount, activeClients, monthlyVisits, avgVisitRate, avgCheck };
   }, [db]);
 
-  if (!dbReady || !db) {
-    return (
-      <div className="app-root">
-        <section className="auth-layout glass">
-          <div className="auth-promo">
-            <h2>Загрузка CRM...</h2>
-            <p>Подключаемся к базе данных и загружаем данные клуба.</p>
-          </div>
-        </section>
-      </div>
-    );
-  }
+  const showLoadingScreen = !db || !dbReady || !minimumSplashPassed || loadingProgress < 100;
 
+  if (showLoadingScreen) {
+    return <LuxuryLoadingScreen scene={loadingScene} progress={loadingProgress} />;
+  }
   const user = db.users.find((u) => u.id === sessionUserId) || null;
 
   function doLogin(e) {
@@ -525,14 +584,8 @@ function App() {
       {!user ? (
         <section className="auth-layout glass">
           <div className="auth-promo">
-            <p className="auth-kicker">Executive Access</p>
-            <h2>Авторизация PulsePoint</h2>
-            <div className="auth-highlights">
-              <div><b>24/7</b><span>доступ к данным клуба</span></div>
-              <div><b>1 click</b><span>переключение между модулями</span></div>
-              <div><b>Secure</b><span>проверка учётной записи в API</span></div>
-            </div>
-            <ul>
+            <h2>PulsePoint Executive Access</h2>
+            <ul className="auth-credentials-list">
               <li>admin@pulsepoint.club / admin123</li>
               <li>trainer@pulsepoint.club / trainer123</li>
               <li>hr@pulsepoint.club / hr123</li>
@@ -540,10 +593,8 @@ function App() {
               <li>super@pulsepoint.club / super123</li>
             </ul>
           </div>
-
           <div className="auth-box">
             <p className="auth-box-title">Доступ сотрудника</p>
-            <p className="auth-box-subtitle">Все элементы формы выстроены сверху вниз для быстрого ввода.</p>
 
             <div className="switch-row">
               <button type="button" className={`btn ${authMode === 'login' ? 'active' : 'ghost'}`} onClick={() => setAuthMode('login')}>Вход</button>
@@ -639,12 +690,30 @@ function App() {
 
       <footer className="site-footer glass">
         <div>PulsePoint Fitness Club</div>
-        <div>г. Самара, ТЦ ПаркХаус · +7 (495) 000-11-22 · crm@pulsepoint.club</div>
+        <div>г. Самара, ТЦ ПаркХаус · +7 (846) 000-11-22 · crm@pulsepoint.club</div>
       </footer>
     </div>
   );
 }
 
+function LuxuryLoadingScreen({ scene, progress }) {
+  return (
+    <div className="lux-loading-screen">
+      <div className="lux-loading-grid" aria-hidden="true"></div>
+      <div className="lux-loading-orb lux-loading-orb--one" aria-hidden="true"></div>
+      <div className="lux-loading-orb lux-loading-orb--two" aria-hidden="true"></div>
+      <div className="lux-loading-shell">
+        <h1 className="lux-loading-message">{scene.title || 'Подготавливаем премиальное пространство'}</h1>
+        <div className="lux-loading-progress" aria-hidden="true">
+          <i style={{ width: String(Math.round(progress)) + '%' }}></i>
+        </div>
+        <div className="lux-loading-meta">
+          <strong>{Math.round(progress)}%</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
 function RoleDashboard({ user, tab, db, setDb, metrics }) {
   if (user.role === 'admin') return <AdminDashboard tab={tab} db={db} setDb={setDb} metrics={metrics} />;
   if (user.role === 'trainer') return <TrainerDashboard tab={tab} db={db} setDb={setDb} user={user} />;
@@ -799,18 +868,49 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
   ];
   const [widgetToAdd, setWidgetToAdd] = useState('payments');
   const [activeWidgetIds, setActiveWidgetIds] = useState(['users', 'trainers', 'clients', 'classes']);
+  const availableWidgets = analyticsWidgets.filter((widget) => !activeWidgetIds.includes(widget.id));
+  const selectedWidgetId = availableWidgets.some((widget) => widget.id === widgetToAdd) ? widgetToAdd : (availableWidgets[0]?.id || '');
+  const payrollRows = db.trainers.map((trainer) => {
+    const trainerClasses = db.classes.filter((item) => item.trainerId === trainer.id);
+    const completed = trainerClasses.filter((item) => item.done).length;
+    const bonus = completed >= 2 ? Math.round(trainer.rate * 0.15) : 0;
+    const payout = trainerClasses.length * trainer.rate + bonus;
+    const utilization = Math.min(100, Math.round((trainerClasses.length / Math.max(trainer.maxDailySlots * 5, 1)) * 100));
+    return { id: trainer.id, name: trainer.name, classes: trainerClasses.length, completed, rate: trainer.rate, bonus, payout, utilization };
+  });
+  const totalBonus = payrollRows.reduce((sum, row) => sum + row.bonus, 0);
+  const averagePayout = payrollRows.length ? Math.round(payrollRows.reduce((sum, row) => sum + row.payout, 0) / payrollRows.length) : 0;
+  const topPayout = [...payrollRows].sort((a, b) => b.payout - a.payout)[0];
+  const activeAccounts = db.users.filter((user) => !user.isBlocked).length;
+  const linkedTrainerAccounts = db.users.filter((user) => user.role === 'trainer' && byId(db.trainers, user.trainerId)).length;
+  const blockedAccounts = db.users.filter((user) => user.isBlocked).length;
+  const incompleteContacts = db.users.filter((user) => !String(user.phone || '').trim()).length;
+  const accessMatrix = [
+    { role: 'admin', access: 'Полный операционный контроль', focus: 'Рабочий стол, расписание, тренеры, доступы' },
+    { role: 'trainer', access: 'Персональный рабочий контур', focus: 'Свои занятия, клиенты, архив программ' },
+    { role: 'hr', access: 'Команда и найм', focus: 'Подбор, сертификации, посещаемость персонала' },
+    { role: 'accountant', access: 'Финансовый контур', focus: 'Платежи, выплаты, прогноз по выручке' },
+    { role: 'superuser', access: 'Критические доступы', focus: 'Заявки, сброс паролей, блокировки и роли' },
+  ];
+  const upcomingClasses = [...db.classes]
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.time).localeCompare(String(b.time)))
+    .slice(0, 6);
 
-  if (tab === 'Обзор') {
+  if (tab === 'Рабочий стол') {
     return (
       <>
         <Card>
-          <h3>Ключевые показатели клуба</h3>
+          <div className="section-heading">
+            <div>
+              <h3>Операционная картина дня</h3>
+            </div>
+          </div>
           <div className="metrics metrics-rich">
             <Metric label="Выручка" value={money(metrics.revenue)} />
             <Metric label="Средний чек" value={money(metrics.avgCheck)} />
-            <Metric label="Активные клиенты" value={`${metrics.activeClients}/${metrics.clientsCount}`} />
+            <Metric label="Активные клиенты" value={String(metrics.activeClients) + '/' + String(metrics.clientsCount)} />
             <Metric label="Посещений / месяц" value={metrics.monthlyVisits} />
-            <Metric label="Средняя посещаемость" value={`${metrics.avgVisitRate} на клиента`} />
+            <Metric label="Средняя посещаемость" value={String(metrics.avgVisitRate) + ' на клиента'} />
             <Metric label="Тренеров" value={db.trainers.length} />
             <Metric label="Занятий" value={metrics.classCount} />
             <Metric label="Средняя нагрузка / день" value={metrics.avgDailyClasses} />
@@ -818,51 +918,63 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
           </div>
         </Card>
         <Card>
-          <h3>Виджеты аналитики по категориям данных</h3>
-          <div className="row" style={{ marginBottom: 12, gap: 10 }}>
-            <select value={widgetToAdd} onChange={(e) => setWidgetToAdd(e.target.value)}>
-              {analyticsWidgets.filter((w) => !activeWidgetIds.includes(w.id)).map((w) => <option key={w.id} value={w.id}>{w.label}</option>)}
+          <div className="section-heading">
+            <div>
+              <h3>Гибкая панель виджетов</h3>
+            </div>
+          </div>
+          <div className="admin-inline-controls">
+            <select value={selectedWidgetId} onChange={(event) => setWidgetToAdd(event.target.value)} disabled={!availableWidgets.length}>
+              {availableWidgets.length ? availableWidgets.map((widget) => <option key={widget.id} value={widget.id}>{widget.label}</option>) : <option value="">Все виджеты уже выведены</option>}
             </select>
-            <button
-              type="button"
-              className="btn ghost"
-              onClick={() => setActiveWidgetIds((prev) => (prev.includes(widgetToAdd) ? prev : [...prev, widgetToAdd]))}
-              disabled={analyticsWidgets.every((w) => activeWidgetIds.includes(w.id))}
-            >
-              Добавить виджет
-            </button>
+            <button type="button" className="btn ghost" onClick={() => setActiveWidgetIds((prev) => (selectedWidgetId && !prev.includes(selectedWidgetId) ? [...prev, selectedWidgetId] : prev))} disabled={!availableWidgets.length}>Добавить виджет</button>
           </div>
           <div className="metrics metrics-rich">
-            {analyticsWidgets.filter((w) => activeWidgetIds.includes(w.id)).map((w) => (
-              <div key={w.id} className="metric">
-                <div className="metric-label">{w.label}</div>
-                <div className="metric-value">{w.value}</div>
-                <small>{w.note}</small>
+            {analyticsWidgets.filter((widget) => activeWidgetIds.includes(widget.id)).map((widget) => (
+              <div key={widget.id} className="metric">
+                <div className="metric-label">{widget.label}</div>
+                <div className="metric-value">{widget.value}</div>
+                <small>{widget.note}</small>
                 <div>
-                  <button type="button" className="btn ghost" onClick={() => setActiveWidgetIds((prev) => prev.filter((id) => id !== w.id))}>Скрыть</button>
+                  <button type="button" className="btn ghost" onClick={() => setActiveWidgetIds((prev) => prev.filter((id) => id !== widget.id))}>Скрыть</button>
                 </div>
               </div>
             ))}
           </div>
         </Card>
         <Card>
-          <h3>Нагрузка тренеров (диаграмма)</h3>
+          <div className="section-heading">
+            <div>
+              <h3>Расписание под рукой</h3>
+            </div>
+          </div>
+          <DataTable
+            headers={['Дата', 'Время', 'Занятие', 'Тренер', 'Статус']}
+            rows={upcomingClasses.map((item) => [item.date, item.time, item.title, byId(db.trainers, item.trainerId)?.name || '—', item.done ? 'Проведено' : 'Запланировано'])}
+          />
+        </Card>
+        <Card>
+          <div className="section-heading">
+            <div>
+              <h3>Нагрузка тренеров</h3>
+            </div>
+          </div>
           <LoadBars db={db} />
         </Card>
         <Card>
-          <h3>Топ клиентов по посещениям</h3>
+          <div className="section-heading">
+            <div>
+              <h3>Топ клиентов по посещениям</h3>
+            </div>
+          </div>
           <DataTable
             headers={['Клиент', 'Абонемент', 'Посещения', 'Последний визит', 'Статус']}
-            rows={[...db.clients]
-              .sort((a, b) => Number(b.visits || 0) - Number(a.visits || 0))
-              .slice(0, 6)
-              .map((c) => [c.name, c.membership || '—', Number(c.visits || 0), c.lastVisit || '—', c.status])}
+            rows={[...db.clients].sort((a, b) => Number(b.visits || 0) - Number(a.visits || 0)).slice(0, 6).map((client) => [client.name, client.membership || '—', Number(client.visits || 0), client.lastVisit || '—', client.status])}
           />
         </Card>
       </>
     );
   }
-
   if (tab === 'Календарь нагрузки') {
     return <Card><h3>Календарь распределения нагрузок</h3><LoadCalendar db={db} /></Card>;
   }
@@ -928,55 +1040,88 @@ function AdminDashboard({ tab, db, setDb, metrics }) {
     );
   }
 
-  if (tab === 'Учётки') {
+  if (tab === 'Аккаунты') {
     return (
-      <Card>
-        <h3>Управление учётными записями</h3>
-        <form className="form-grid" onSubmit={(e) => {
-          e.preventDefault();
-          if (!accountForm.name || !isValidEmail(accountForm.email) || !isStrongPassword(accountForm.password) || !isValidPhone(accountForm.phone)) return;
-          if (db.users.some((u) => u.email.trim().toLowerCase() === accountForm.email.trim().toLowerCase())) return;
-          setDb((s) => ({ ...s, users: [...s.users, { id: nextId(s.users), ...accountForm, email: accountForm.email.trim().toLowerCase(), trainerId: accountForm.role === 'trainer' ? s.trainers[0]?.id : undefined }] }));
-          setAccountForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
-        }}>
-          <input placeholder="ФИО" required minLength={3} value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} />
-          <input placeholder="Email" type="email" required value={accountForm.email} onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value.toLowerCase() })} />
-          <input placeholder="Телефон" pattern="[+\d\s()-]{10,20}" value={accountForm.phone} onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })} />
-          <input placeholder="Пароль" type="password" required minLength={6} value={accountForm.password} onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })} />
-          <select value={accountForm.role} onChange={(e) => setAccountForm({ ...accountForm, role: e.target.value })}><option value="trainer">Тренер</option><option value="hr">HR</option><option value="accountant">Бухгалтер</option><option value="admin">Админ</option></select>
-          <button className="btn primary">Добавить учётку</button>
-        </form>
-        <DataTable
-          headers={['Сотрудник', 'Роль', 'Связь с тренером', 'Email', 'Телефон']}
-          rows={db.users.map((u) => [u.name, roleLabels[u.role], u.role === 'trainer' ? (byId(db.trainers, u.trainerId)?.name || 'Связь не настроена') : '—', u.email, u.phone || '-'])}
-        />
-        <h3>Счётчики посещений клиентов</h3>
-        <DataTable
-          headers={['Клиент', 'Абонемент', 'Тренер', 'Посещения', 'Последний визит', 'Статус']}
-          rows={db.clients.map((c) => [
-            c.name,
-            c.membership || '—',
-            byId(db.trainers, c.trainerId)?.name || '—',
-            Number(c.visits || 0),
-            c.lastVisit || '—',
-            c.status,
-          ])}
-        />
-      </Card>
+      <>
+        <Card>
+          <div className="section-heading">
+            <div>
+              <h3>Аккаунты и права</h3>
+            </div>
+          </div>
+          <div className="metrics metrics-rich">
+            <Metric label="Активные аккаунты" value={activeAccounts} />
+            <Metric label="Связаны с тренерами" value={linkedTrainerAccounts} />
+            <Metric label="Заблокированы" value={blockedAccounts} />
+            <Metric label="Профили без телефона" value={incompleteContacts} />
+          </div>
+          <form className="form-grid" onSubmit={(event) => {
+            event.preventDefault();
+            if (!accountForm.name || !isValidEmail(accountForm.email) || !isStrongPassword(accountForm.password) || !isValidPhone(accountForm.phone)) return;
+            if (db.users.some((user) => user.email.trim().toLowerCase() === accountForm.email.trim().toLowerCase())) return;
+            setDb((state) => {
+              const freeTrainer = state.trainers.find((trainer) => !state.users.some((user) => user.role === 'trainer' && Number(user.trainerId) === Number(trainer.id)));
+              return {
+                ...state,
+                users: [...state.users, { id: nextId(state.users), ...accountForm, email: accountForm.email.trim().toLowerCase(), trainerId: accountForm.role === 'trainer' ? (freeTrainer?.id || state.trainers[0]?.id) : undefined }],
+              };
+            });
+            setAccountForm({ name: '', email: '', phone: '', password: '', role: 'trainer' });
+          }}>
+            <input placeholder="ФИО" required minLength={3} value={accountForm.name} onChange={(event) => setAccountForm({ ...accountForm, name: event.target.value })} />
+            <input placeholder="Email" type="email" required value={accountForm.email} onChange={(event) => setAccountForm({ ...accountForm, email: event.target.value.toLowerCase() })} />
+            <input placeholder="Телефон" pattern="[+\d\s()-]{10,20}" value={accountForm.phone} onChange={(event) => setAccountForm({ ...accountForm, phone: event.target.value })} />
+            <input placeholder="Пароль" type="password" required minLength={6} value={accountForm.password} onChange={(event) => setAccountForm({ ...accountForm, password: event.target.value })} />
+            <select value={accountForm.role} onChange={(event) => setAccountForm({ ...accountForm, role: event.target.value })}><option value="trainer">Тренер</option><option value="hr">HR</option><option value="accountant">Бухгалтер</option><option value="admin">Админ</option></select>
+            <button className="btn primary">Добавить аккаунт</button>
+          </form>
+          <DataTable
+            headers={['Сотрудник', 'Роль', 'Доступ', 'Связь с тренером', 'Email', 'Телефон']}
+            rows={db.users.map((user) => [user.name, roleLabels[user.role], user.isBlocked ? 'Заблокирован' : 'Активен', user.role === 'trainer' ? (byId(db.trainers, user.trainerId)?.name || 'Связь не настроена') : '—', user.email, user.phone || '—'])}
+          />
+        </Card>
+        <Card>
+          <div className="section-heading">
+            <div>
+              <h3>Распределение прав и зон ответственности</h3>
+            </div>
+          </div>
+          <DataTable
+            headers={['Роль', 'Аккаунтов', 'Доступ', 'Ключевая зона ответственности']}
+            rows={accessMatrix.map((item) => [roleLabels[item.role] || item.role, db.users.filter((user) => user.role === item.role).length, item.access, item.focus])}
+          />
+        </Card>
+      </>
     );
   }
-
   return (
-    <Card>
-      <h3>Зарплатная ведомость</h3>
-      <DataTable
-        headers={['Тренер', 'Занятий', 'Ставка', 'К выплате']}
-        rows={db.trainers.map((tr) => {
-          const classes = db.classes.filter((c) => c.trainerId === tr.id).length;
-          return [tr.name, classes, money(tr.rate), money(classes * tr.rate)];
-        })}
-      />
-    </Card>
+    <>
+      <Card>
+        <div className="section-heading">
+          <div>
+            <h3>Зарплаты и готовность к начислению</h3>
+          </div>
+        </div>
+        <div className="metrics metrics-rich">
+          <Metric label="Всего к выплате" value={money(metrics.totalPayroll + totalBonus)} />
+          <Metric label="Бонусный фонд" value={money(totalBonus)} />
+          <Metric label="Средняя выплата" value={money(averagePayout)} />
+          <Metric label="Топ начисление" value={topPayout ? topPayout.name : '—'} />
+        </div>
+        <PayrollBars rows={payrollRows} />
+      </Card>
+      <Card>
+        <div className="section-heading">
+          <div>
+            <h3>Ведомость по тренерам</h3>
+          </div>
+        </div>
+        <DataTable
+          headers={['Тренер', 'Занятий', 'Проведено', 'Ставка', 'Бонус', 'К выплате']}
+          rows={payrollRows.map((row) => [row.name, row.classes, row.completed, money(row.rate), money(row.bonus), money(row.payout)])}
+        />
+      </Card>
+    </>
   );
 }
 
@@ -1015,20 +1160,28 @@ function TrainerDashboard({ tab, db, setDb, user }) {
     return (
       <>
         <Card>
-          <h3>Управление занятиями</h3>
+          <div className="section-heading">
+            <div>
+              <h3>Мои занятия</h3>
+            </div>
+          </div>
           <DataTable
             headers={['Дата', 'Время', 'Занятие', 'Статус', '']}
-            rows={myClasses.map((c) => [
-              c.date,
-              c.time,
-              c.title,
-              c.done ? 'Проведено' : 'Запланировано',
-              <button type="button" className="btn ghost" onClick={() => setDb((s) => ({ ...s, classes: s.classes.map((x) => x.id === c.id ? { ...x, done: !x.done } : x) }))}>{c.done ? 'Откатить' : 'Закрыть'}</button>,
+            rows={myClasses.map((item) => [
+              item.date,
+              item.time,
+              item.title,
+              item.done ? 'Проведено' : 'Запланировано',
+              <button type="button" className="btn ghost" onClick={() => setDb((state) => ({ ...state, classes: state.classes.map((current) => current.id === item.id ? { ...current, done: !current.done } : current) }))}>{item.done ? 'Откатить' : 'Закрыть'}</button>,
             ])}
           />
         </Card>
         <Card>
-          <h3>Архив тренировок</h3>
+          <div className="section-heading">
+            <div>
+              <h3>Библиотека программ</h3>
+            </div>
+          </div>
           <div className="workout-archive-grid">
             {myArchive.map((item) => {
               const shouldShowVideo = item.mediaType === 'video';
@@ -1051,10 +1204,12 @@ function TrainerDashboard({ tab, db, setDb, user }) {
                   ) : (
                     <img src={item.media} alt={item.title} className="workout-archive-image" loading="lazy" />
                   )}
-                  <div>
-                    <h4>{item.title}</h4>
-                    <p className="workout-archive-level">{item.level}</p>
-                    <p>{item.description}</p>
+                  <div className="workout-archive-content">
+                    <div className="workout-archive-head">
+                      <h4>{item.title}</h4>
+                      <span className="premium-pill premium-pill--soft">{item.level}</span>
+                    </div>
+                    <p className="workout-description">{item.description}</p>
                   </div>
                 </article>
               );
@@ -1064,7 +1219,6 @@ function TrainerDashboard({ tab, db, setDb, user }) {
       </>
     );
   }
-
   if (tab === 'Клиенты') {
     return (
       <Card>
@@ -1276,6 +1430,25 @@ function LoadBars({ db }) {
   );
 }
 
+function PayrollBars({ rows }) {
+  const max = Math.max(...rows.map((row) => row.payout), 1);
+
+  return (
+    <div className="bars payroll-bars">
+      {rows.map((row) => (
+        <div className="payroll-bar-row" key={row.id}>
+          <div className="bar-label">
+            <strong>{row.name}</strong>
+            <small>{row.completed} проведено · загрузка {row.utilization}%</small>
+          </div>
+          <div className="bar"><i style={{ width: String(Math.round((row.payout / max) * 100)) + '%' }}></i></div>
+          <b>{money(row.payout)}</b>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PaymentPie({ payments }) {
   const grouped = payments.reduce((acc, p) => {
     acc[p.method] = (acc[p.method] || 0) + Number(p.amount);
@@ -1353,4 +1526,24 @@ function LoadCalendar({ db }) {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
